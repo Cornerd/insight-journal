@@ -10,7 +10,22 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...compat.extends(
+    "next/core-web-vitals",
+    "next/typescript",
+    "prettier"
+  ),
+  ...compat.plugins("prettier"),
+  {
+    rules: {
+      "prettier/prettier": "error",
+      // Additional custom rules
+      "@typescript-eslint/no-unused-vars": "error",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "react/jsx-curly-brace-presence": ["error", "never"],
+      "react/self-closing-comp": "error",
+    },
+  },
 ];
 
 export default eslintConfig;

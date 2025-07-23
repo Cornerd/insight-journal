@@ -170,13 +170,48 @@ To learn more about the technologies used in this project:
 - [OpenAI API](https://platform.openai.com/docs) - AI integration guide
 - [TypeScript](https://www.typescriptlang.org/docs) - TypeScript handbook
 
+## Deployment
+
+### Deploy to Vercel (Recommended)
+
+The easiest way to deploy Insight Journal is using Vercel:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/insight-journal&env=OPENAI_API_KEY,NEXT_PUBLIC_APP_URL&envDescription=Required%20environment%20variables%20for%20Insight%20Journal)
+
+### Manual Deployment Steps
+
+1. **Fork and clone this repository**
+2. **Set up environment variables in Vercel Dashboard:**
+   - `OPENAI_API_KEY` - Your OpenAI API key
+   - `NEXT_PUBLIC_APP_URL` - Your Vercel app URL
+   - `OPENAI_ORG_ID` (optional) - Your OpenAI organization ID
+
+3. **Deploy:**
+   ```bash
+   # Connect to Vercel
+   npx vercel
+
+   # Deploy to production
+   npx vercel --prod
+   ```
+
+For detailed deployment instructions, see [Vercel Deployment Guide](./docs/deployment/vercel-deployment.md).
+
+### Other Deployment Options
+
+- **Netlify**: Compatible with Next.js static export
+- **Railway**: Full-stack deployment platform
+- **DigitalOcean App Platform**: Container-based deployment
+- **Self-hosted**: Docker container deployment
+
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes and test thoroughly
 4. Ensure all environment variables are documented
-5. Submit a pull request with a clear description
+5. Run tests and linting: `npm run lint && npm run type-check`
+6. Submit a pull request with a clear description
 
 ## License
 

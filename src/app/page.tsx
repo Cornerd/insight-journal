@@ -100,8 +100,8 @@ export default function Home() {
                 Smart Writing Assistant
               </h3>
               <p className='text-gray-600 dark:text-gray-300'>
-                Overcome writer&apos;s block with AI-generated prompts and writing
-                suggestions.
+                Overcome writer&apos;s block with AI-generated prompts and
+                writing suggestions.
               </p>
             </div>
 

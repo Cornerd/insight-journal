@@ -3,10 +3,7 @@
  * Centralized error handling for API operations
  */
 
-import {
-  OpenAIErrorType,
-  ProcessedOpenAIError,
-} from '@/features/ai-insights/types/openai.types';
+import { ProcessedOpenAIError } from '@/features/ai-insights/types/openai.types';
 
 // Base API Error class
 export class APIError extends Error {

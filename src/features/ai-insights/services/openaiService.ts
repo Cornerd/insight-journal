@@ -155,7 +155,7 @@ export function getCurrentConfig(): Omit<OpenAIConfig, 'apiKey'> {
       baseURL: config.baseURL,
       timeout: config.timeout,
     };
-  } catch (error) {
+  } catch {
     throw new Error('OpenAI is not properly configured');
   }
 }
@@ -165,7 +165,7 @@ export async function isServiceAvailable(): Promise<boolean> {
   try {
     const result = await testConnection('ping');
     return result.success;
-  } catch (error) {
+  } catch {
     return false;
   }
 }

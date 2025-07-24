@@ -36,7 +36,7 @@ export async function POST(
     let body: TestConnectionRequest;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         {
           success: false,
@@ -117,7 +117,7 @@ export async function GET(): Promise<NextResponse> {
     let config;
     try {
       config = getCurrentConfig();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
         {
           configured: false,

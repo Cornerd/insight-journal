@@ -11,13 +11,14 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { useJournalStore } from '@/shared/store/journalStore';
 import { MarkdownEditor } from '@/features/editor/components/MarkdownEditor';
+import { JournalEntry } from '@/features/journal/types/journal.types';
 
 export default function JournalEntryPage() {
   const params = useParams();
   const router = useRouter();
   const { entries, setCurrentEntry } = useJournalStore();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [entry, setEntry] = useState(null);
+  const [entry, setEntry] = useState<JournalEntry | null>(null);
 
   const entryId = params.id as string;
 

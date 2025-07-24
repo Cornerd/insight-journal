@@ -15,6 +15,7 @@ interface JournalListProps {
   selectedEntryId?: string | null;
   onEntryClick: (entry: JournalEntry) => void;
   onCreateFirst?: () => void;
+  onCreateNew?: () => void;
   className?: string;
 }
 
@@ -25,6 +26,7 @@ export function JournalList({
   selectedEntryId,
   onEntryClick,
   onCreateFirst,
+  onCreateNew,
   className = '',
 }: JournalListProps) {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
@@ -88,6 +90,34 @@ export function JournalList({
         </div>
 
         <div className='flex items-center space-x-2'>
+          {/* New Entry Button */}
+          {onCreateNew && (
+            <button
+              onClick={onCreateNew}
+              className='
+                inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
+                bg-blue-600 text-white hover:bg-blue-700
+                transition-colors duration-200 shadow-sm hover:shadow-md
+              '
+              title='Create a new journal entry'
+            >
+              <svg
+                className='w-3 h-3 mr-1'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M12 4v16m8-8H4'
+                />
+              </svg>
+              New
+            </button>
+          )}
+
           {/* Sort dropdown */}
           <select
             value={sortBy}

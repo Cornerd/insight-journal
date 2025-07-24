@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -16,11 +16,61 @@ import { JournalEntry } from '@/features/journal/types/journal.types';
 export default function JournalEntryPage() {
   const params = useParams();
   const router = useRouter();
-  const { entries, setCurrentEntry } = useJournalStore();
+  const { entries, setCurrentEntry, updateEntry, isLoading } =
+    useJournalStore();
   const [isEditMode, setIsEditMode] = useState(false);
   const [entry, setEntry] = useState<JournalEntry | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const entryId = params.id as string;
+
+  // Handle save operation
+  const handleSave = useCallback(async () => {
+    if (!entry) return;
+
+    try {
+      await updateEntry({
+        id: entry.id,
+        content: entry.content,
+        title: entry.title,
+      });
+      setHasUnsavedChanges(false);
+      // Optionally exit edit mode after save
+      // setIsEditMode(false);
+    } catch (error) {
+      console.error('Failed to save entry:', error);
+    }
+  }, [entry, updateEntry]);
+
+  // Handle edit mode toggle with unsaved changes warning
+  const handleEditModeToggle = useCallback(() => {
+    if (isEditMode && hasUnsavedChanges) {
+      const confirmExit = window.confirm(
+        'You have unsaved changes. Are you sure you want to exit edit mode?'
+      );
+      if (!confirmExit) return;
+    }
+    setIsEditMode(!isEditMode);
+    setHasUnsavedChanges(false);
+  }, [isEditMode, hasUnsavedChanges]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditMode && (event.ctrlKey || event.metaKey)) {
+        if (event.key === 's') {
+          event.preventDefault();
+          handleSave();
+        } else if (event.key === 'Escape') {
+          event.preventDefault();
+          handleEditModeToggle();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isEditMode, handleSave, handleEditModeToggle]);
 
   useEffect(() => {
     if (entryId && entries.length > 0) {
@@ -81,19 +131,42 @@ export default function JournalEntryPage() {
         </Link>
 
         <div className='flex items-center space-x-2'>
+          {isEditMode && (
+            <button
+              onClick={handleSave}
+              disabled={isLoading || !hasUnsavedChanges}
+              className={`
+                px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
+                ${
+                  isLoading || !hasUnsavedChanges
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }
+              `}
+            >
+              {isLoading ? '💾 Saving...' : '💾 Save Changes'}
+            </button>
+          )}
+
           <button
-            onClick={() => setIsEditMode(!isEditMode)}
+            onClick={handleEditModeToggle}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
               ${
                 isEditMode
-                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  ? 'bg-gray-600 text-white hover:bg-gray-700'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }
             `}
           >
-            {isEditMode ? '📖 View Mode' : '✏️ Edit Mode'}
+            {isEditMode ? '�️ View Mode' : '✏️ Edit Mode'}
           </button>
+
+          {hasUnsavedChanges && (
+            <span className='text-sm text-amber-600 dark:text-amber-400 font-medium'>
+              • Unsaved changes
+            </span>
+          )}
         </div>
       </div>
 
@@ -187,9 +260,20 @@ export default function JournalEntryPage() {
                 Edit Entry
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-300'>
-                Make changes to your journal entry. Changes will be saved
-                automatically.
+                Make changes to your journal entry. Use{' '}
+                <kbd className='px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded'>
+                  Ctrl+S
+                </kbd>{' '}
+                to save or click the Save button above.
               </p>
+              {hasUnsavedChanges && (
+                <div className='mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md'>
+                  <p className='text-sm text-amber-800 dark:text-amber-200'>
+                    ⚠️ You have unsaved changes. Don&apos;t forget to save your
+                    work!
+                  </p>
+                </div>
+              )}
             </div>
             <MarkdownEditor />
           </div>

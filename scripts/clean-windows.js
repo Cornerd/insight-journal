@@ -5,7 +5,23 @@ const { execSync } = require('child_process');
 /**
  * Windows-specific cleanup script for Next.js development
  * Handles permission issues with .next directory and trace files
+ * Also kills conflicting Node.js processes
  */
+
+function killNodeProcesses() {
+  try {
+    console.log('🔪 Killing existing Node.js processes...');
+
+    // Kill all node.exe processes (be careful with this!)
+    execSync('taskkill /f /im node.exe', { stdio: 'ignore' });
+    console.log('✓ Killed Node.js processes');
+
+    // Wait a moment for processes to fully terminate
+    setTimeout(() => {}, 1000);
+  } catch (error) {
+    console.log('ℹ️ No Node.js processes to kill or access denied');
+  }
+}
 
 function forceDeleteFile(filePath) {
   try {
@@ -66,6 +82,9 @@ function forceDeleteDirectory(dirPath) {
 function cleanNext() {
   console.log('🧹 Starting Windows-specific Next.js cleanup...');
 
+  // First, kill any existing Node.js processes to prevent conflicts
+  killNodeProcesses();
+
   const nextDir = '.next';
   const traceFile = path.join(nextDir, 'trace');
 
@@ -89,4 +108,4 @@ if (require.main === module) {
   cleanNext();
 }
 
-module.exports = { cleanNext, forceDeleteFile, forceDeleteDirectory };
+module.exports = { cleanNext, forceDeleteFile, forceDeleteDirectory, killNodeProcesses };

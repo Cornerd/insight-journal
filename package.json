@@ -17,10 +17,15 @@
     "clean:trace": "node -e \"const fs = require('fs'); const path = require('path'); try { if (fs.existsSync('.next/trace')) { fs.chmodSync('.next/trace', 0o666); fs.unlinkSync('.next/trace'); } } catch(e) { console.log('Trace cleanup:', e.message); }\"",
     "clean:next": "node -e \"const fs = require('fs'); try { if (fs.existsSync('.next')) { fs.rmSync('.next', {recursive: true, force: true, maxRetries: 3, retryDelay: 100}); } } catch(e) { console.log('Next cleanup:', e.message); }\"",
     "clean:windows": "node scripts/clean-windows.js",
+    "kill:ports": "node scripts/kill-port.js",
+    "dev:clean": "npm run kill:ports && npm run clean:windows && next dev",
     "prepare": "husky"
   },
   "dependencies": {
     "@uiw/react-md-editor": "^4.0.8",
+    "date-fns": "^4.1.0",
+    "immer": "^10.1.1",
+    "nanoid": "^5.1.5",
     "next": "15.4.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",

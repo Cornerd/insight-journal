@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
-import { useEditorContent } from '../hooks/useEditorContent';
+import { useJournalStore } from '../../../shared/store/journalStore';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -13,29 +13,79 @@ interface MarkdownEditorProps {
 export function MarkdownEditor({
   placeholder = 'Start writing your thoughts...',
 }: MarkdownEditorProps) {
+  // Journal store state and actions
   const {
-    content,
+    currentEntry,
     isLoading,
+    error,
     lastSaved,
-    hasUnsavedChanges,
-    setContent,
-    saveContent,
-    loadContent,
-    autoSave,
-  } = useEditorContent();
+    addEntry,
+    updateEntry,
+    setCurrentEntry,
+    loadEntries,
+    clearError,
+  } = useJournalStore();
+
+  // Local state for editor
+  const [content, setContent] = useState('');
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const [editorHeight, setEditorHeight] = useState(400);
   const [previewMode, setPreviewMode] = useState<'edit' | 'live' | 'preview'>(
     'edit'
   );
 
+  // Load entries on component mount
   useEffect(() => {
-    loadContent();
-  }, [loadContent]);
+    loadEntries();
+  }, [loadEntries]);
 
+  // Sync content with current entry
+  useEffect(() => {
+    if (currentEntry) {
+      setContent(currentEntry.content);
+      setHasUnsavedChanges(false);
+    } else {
+      setContent('');
+      setHasUnsavedChanges(false);
+    }
+  }, [currentEntry]);
+
+  // Handle content changes
+  const handleContentChange = useCallback((value: string = '') => {
+    setContent(value);
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Handle save
   const handleSave = useCallback(async () => {
-    await saveContent();
-  }, [saveContent]);
+    if (!content.trim()) return;
+
+    try {
+      if (currentEntry) {
+        // Update existing entry
+        await updateEntry({
+          id: currentEntry.id,
+          content,
+        });
+      } else {
+        // Create new entry
+        await addEntry({
+          content,
+        });
+      }
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Failed to save entry:', error);
+    }
+  }, [content, currentEntry, updateEntry, addEntry]);
+
+  // Auto-save functionality
+  const autoSave = useCallback(async () => {
+    if (hasUnsavedChanges && content.trim()) {
+      await handleSave();
+    }
+  }, [hasUnsavedChanges, content, handleSave]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -130,7 +180,7 @@ export function MarkdownEditor({
       <div className='relative'>
         <MDEditor
           value={content}
-          onChange={value => setContent(value || '')}
+          onChange={handleContentChange}
           preview={previewMode}
           hideToolbar={false}
           visibleDragbar={false}
@@ -182,8 +232,31 @@ export function MarkdownEditor({
 
           {lastSaved && (
             <span className='text-sm text-gray-500 dark:text-gray-400'>
-              Last saved: {lastSaved.toLocaleTimeString()}
+              Last saved: {
+                (() => {
+                  try {
+                    const date = lastSaved instanceof Date ? lastSaved : new Date(lastSaved);
+                    return date.toLocaleTimeString();
+                  } catch (error) {
+                    console.error('Error formatting lastSaved date:', error, lastSaved);
+                    return 'Unknown time';
+                  }
+                })()
+              }
             </span>
+          )}
+
+          {/* Error Display */}
+          {error && (
+            <div className='flex items-center space-x-2 text-red-600 dark:text-red-400'>
+              <span className='text-sm'>❌ {error}</span>
+              <button
+                onClick={clearError}
+                className='text-xs underline hover:no-underline'
+              >
+                Dismiss
+              </button>
+            </div>
           )}
         </div>
       </div>

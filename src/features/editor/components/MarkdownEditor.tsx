@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
@@ -25,15 +25,17 @@ export function MarkdownEditor({
   } = useEditorContent();
 
   const [editorHeight, setEditorHeight] = useState(400);
-  const [previewMode, setPreviewMode] = useState<'edit' | 'live' | 'preview'>('edit');
+  const [previewMode, setPreviewMode] = useState<'edit' | 'live' | 'preview'>(
+    'edit'
+  );
 
   useEffect(() => {
     loadContent();
   }, [loadContent]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     await saveContent();
-  };
+  }, [saveContent]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -83,8 +85,16 @@ export function MarkdownEditor({
           <div className='flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden'>
             {[
               { mode: 'edit' as const, label: '✏️ Edit', title: 'Edit Mode' },
-              { mode: 'live' as const, label: '👁️ Live', title: 'Live Preview' },
-              { mode: 'preview' as const, label: '📖 Preview', title: 'Preview Only' },
+              {
+                mode: 'live' as const,
+                label: '👁️ Live',
+                title: 'Live Preview',
+              },
+              {
+                mode: 'preview' as const,
+                label: '📖 Preview',
+                title: 'Preview Only',
+              },
             ].map(({ mode, label, title }) => (
               <button
                 key={mode}
@@ -153,8 +163,8 @@ export function MarkdownEditor({
                 isLoading
                   ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   : !hasUnsavedChanges
-                  ? 'bg-green-600 text-white cursor-default'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                    ? 'bg-green-600 text-white cursor-default'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
               }
             `}
           >
@@ -185,7 +195,11 @@ export function MarkdownEditor({
             Markdown Quick Reference
           </h3>
           <div className='text-xs text-gray-500 dark:text-gray-400'>
-            💡 Press <kbd className='px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs'>Ctrl+S</kbd> to save
+            💡 Press{' '}
+            <kbd className='px-1 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-xs'>
+              Ctrl+S
+            </kbd>{' '}
+            to save
           </div>
         </div>
         <div className='grid grid-cols-1 md:grid-cols-4 gap-4 text-xs text-gray-600 dark:text-gray-300'>
@@ -198,14 +212,18 @@ export function MarkdownEditor({
           <div>
             # Heading → <strong>Heading</strong>
           </div>
+          <div>- List item → • List item</div>
           <div>
-            - List item → • List item
+            [Link](url) →{' '}
+            <span className='text-blue-600 dark:text-blue-400 underline'>
+              Link
+            </span>
           </div>
           <div>
-            [Link](url) → <span className='text-blue-600 dark:text-blue-400 underline'>Link</span>
-          </div>
-          <div>
-            `Code` → <code className='bg-gray-200 dark:bg-gray-600 px-1 rounded'>Code</code>
+            `Code` →{' '}
+            <code className='bg-gray-200 dark:bg-gray-600 px-1 rounded'>
+              Code
+            </code>
           </div>
           <div>
             &gt; Quote → <em>Quote</em>

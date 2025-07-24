@@ -5,6 +5,11 @@ import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { useJournalStore } from '../../../shared/store/journalStore';
+import {
+  useAIAnalysis,
+  isContentSuitableForAnalysis,
+} from '../../ai-insights/hooks/useAIAnalysis';
+import { AIAnalysisCard } from '../../ai-insights/components/AIAnalysisCard';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -29,6 +34,16 @@ export function MarkdownEditor({
   const [content, setContent] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  // AI analysis hook
+  const {
+    isLoading: isAnalyzing,
+    error: analysisError,
+    analysis,
+    analyzeEntry,
+    clearError: clearAnalysisError,
+    clearAnalysis,
+  } = useAIAnalysis();
+
   const [editorHeight, setEditorHeight] = useState(400);
   const [previewMode, setPreviewMode] = useState<'edit' | 'live' | 'preview'>(
     'edit'
@@ -44,11 +59,14 @@ export function MarkdownEditor({
     if (currentEntry) {
       setContent(currentEntry.content);
       setHasUnsavedChanges(false);
+      // Clear previous analysis when switching entries
+      clearAnalysis();
     } else {
       setContent('');
       setHasUnsavedChanges(false);
+      clearAnalysis();
     }
-  }, [currentEntry]);
+  }, [currentEntry, clearAnalysis]);
 
   // Handle content changes
   const handleContentChange = useCallback((value: string = '') => {
@@ -61,23 +79,47 @@ export function MarkdownEditor({
     if (!content.trim()) return;
 
     try {
+      let savedEntryId: string;
       if (currentEntry) {
         // Update existing entry
         await updateEntry({
           id: currentEntry.id,
           content,
         });
+        savedEntryId = currentEntry.id;
       } else {
         // Create new entry
-        await addEntry({
+        const result = await addEntry({
           content,
         });
+        if (result.success) {
+          savedEntryId = result.data.id;
+        } else {
+          throw new Error(result.error.message);
+        }
       }
       setHasUnsavedChanges(false);
+
+      // Trigger AI analysis if content is suitable
+      if (isContentSuitableForAnalysis(content)) {
+        try {
+          const aiAnalysis = await analyzeEntry(content, savedEntryId);
+          if (aiAnalysis) {
+            // Update entry with AI analysis
+            await updateEntry({
+              id: savedEntryId,
+              aiAnalysis,
+            });
+          }
+        } catch (analysisError) {
+          console.warn('AI analysis failed:', analysisError);
+          // Don't throw - save was successful, analysis is optional
+        }
+      }
     } catch (error) {
       console.error('Failed to save entry:', error);
     }
-  }, [content, currentEntry, updateEntry, addEntry]);
+  }, [content, currentEntry, updateEntry, addEntry, analyzeEntry]);
 
   // Auto-save functionality
   const autoSave = useCallback(async () => {
@@ -263,6 +305,22 @@ export function MarkdownEditor({
           )}
         </div>
       </div>
+
+      {/* AI Analysis Display */}
+      {(analysis || isAnalyzing || analysisError) && (
+        <AIAnalysisCard
+          analysis={analysis}
+          isLoading={isAnalyzing}
+          error={analysisError}
+          onRetry={() => {
+            if (currentEntry) {
+              analyzeEntry(content, currentEntry.id);
+            }
+          }}
+          onClearError={clearAnalysisError}
+          className='mb-6'
+        />
+      )}
 
       {/* Markdown Help */}
       <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4'>

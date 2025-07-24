@@ -3,6 +3,37 @@
  * Defines the data structures for journal entries and storage
  */
 
+/**
+ * AI Analysis Result
+ * Contains AI-generated insights about a journal entry
+ */
+export interface AIAnalysis {
+  /** AI-generated summary of the entry */
+  summary: string;
+
+  /** When the analysis was generated */
+  generatedAt: Date;
+
+  /** OpenAI model used for analysis */
+  model: string;
+
+  /** Token usage statistics */
+  tokenUsage?: {
+    /** Tokens used in the prompt */
+    prompt: number;
+    /** Tokens used in the completion */
+    completion: number;
+    /** Total tokens used */
+    total: number;
+  };
+
+  /** Analysis type (for future expansion) */
+  type: 'summary';
+
+  /** Analysis version (for prompt evolution tracking) */
+  version: string;
+}
+
 export interface JournalEntry {
   /** Unique identifier generated using nanoid */
   id: string;
@@ -18,6 +49,9 @@ export interface JournalEntry {
 
   /** Optional title (derived from first line or manually set) */
   title?: string;
+
+  /** AI-generated analysis of the entry */
+  aiAnalysis?: AIAnalysis;
 }
 
 /**
@@ -66,6 +100,9 @@ export interface UpdateJournalEntryInput {
 
   /** Updated title */
   title?: string;
+
+  /** Updated AI analysis */
+  aiAnalysis?: AIAnalysis;
 }
 
 /**

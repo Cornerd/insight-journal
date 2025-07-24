@@ -103,13 +103,13 @@ export function validateEnvironmentVariables(): EnvValidationResult {
   const isBuild = process.env.NODE_ENV === 'production' && !process.env.VERCEL;
 
   // Required variables (relaxed during build)
-  const requiredVars = isBuild ? [
-    { name: 'NODE_ENV', validator: validateEnvironment },
-  ] : [
-    { name: 'OPENAI_API_KEY', validator: validateOpenAIKey },
-    { name: 'NODE_ENV', validator: validateEnvironment },
-    { name: 'NEXT_PUBLIC_APP_URL', validator: validateUrl },
-  ];
+  const requiredVars = isBuild
+    ? [{ name: 'NODE_ENV', validator: validateEnvironment }]
+    : [
+        { name: 'OPENAI_API_KEY', validator: validateOpenAIKey },
+        { name: 'NODE_ENV', validator: validateEnvironment },
+        { name: 'NEXT_PUBLIC_APP_URL', validator: validateUrl },
+      ];
 
   for (const { name, validator } of requiredVars) {
     const value = process.env[name];

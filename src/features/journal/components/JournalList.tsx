@@ -14,6 +14,7 @@ interface JournalListProps {
   entries: JournalEntry[];
   selectedEntryId?: string | null;
   onEntryClick: (entry: JournalEntry) => void;
+  onDeleteEntry?: (entry: JournalEntry) => void;
   onCreateFirst?: () => void;
   onCreateNew?: () => void;
   className?: string;
@@ -25,6 +26,7 @@ export function JournalList({
   entries,
   selectedEntryId,
   onEntryClick,
+  onDeleteEntry,
   onCreateFirst,
   onCreateNew,
   className = '',
@@ -96,7 +98,7 @@ export function JournalList({
               onClick={onCreateNew}
               className='
                 inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
-                bg-blue-600 text-white hover:bg-blue-700
+                bg-blue-600 text-white hover:bg-blue-700 cursor-pointer
                 transition-colors duration-200 shadow-sm hover:shadow-md
               '
               title='Create a new journal entry'
@@ -125,8 +127,9 @@ export function JournalList({
             className='
               text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1
               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300
+              hover:border-blue-400 dark:hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-gray-600
               focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-              transition-colors duration-200
+              cursor-pointer transition-colors duration-200
             '
           >
             <option value='newest'>Newest First</option>
@@ -139,10 +142,10 @@ export function JournalList({
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className='
-              p-1 rounded-md text-gray-500 dark:text-gray-400 
-              hover:text-gray-700 dark:hover:text-gray-200 
+              p-1 rounded-md text-gray-500 dark:text-gray-400
+              hover:text-gray-700 dark:hover:text-gray-200
               hover:bg-gray-100 dark:hover:bg-gray-700
-              transition-colors duration-200
+              cursor-pointer transition-colors duration-200
             '
             title={isCollapsed ? 'Expand list' : 'Collapse list'}
           >
@@ -172,6 +175,7 @@ export function JournalList({
                 key={entry.id}
                 entry={entry}
                 onClick={() => onEntryClick(entry)}
+                onDelete={onDeleteEntry}
                 isSelected={selectedEntryId === entry.id}
               />
             ))}

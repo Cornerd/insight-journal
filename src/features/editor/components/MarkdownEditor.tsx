@@ -150,7 +150,7 @@ export function MarkdownEditor({
                 onClick={() => setPreviewMode(mode)}
                 title={title}
                 className={`
-                  px-3 py-1 text-xs font-medium transition-colors duration-200
+                  px-3 py-1 text-xs font-medium cursor-pointer transition-colors duration-200
                   ${
                     previewMode === mode
                       ? 'bg-blue-600 text-white'
@@ -213,7 +213,7 @@ export function MarkdownEditor({
                   ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   : !hasUnsavedChanges
                     ? 'bg-green-600 text-white cursor-default'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg cursor-pointer'
               }
             `}
           >
@@ -255,7 +255,7 @@ export function MarkdownEditor({
               <span className='text-sm'>❌ {error}</span>
               <button
                 onClick={clearError}
-                className='text-xs underline hover:no-underline'
+                className='text-xs underline hover:no-underline cursor-pointer'
               >
                 Dismiss
               </button>

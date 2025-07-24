@@ -11,6 +11,7 @@ import { JournalEntry } from '../types/journal.types';
 interface JournalCardProps {
   entry: JournalEntry;
   onClick: () => void;
+  onDelete?: (entry: JournalEntry) => void;
   isSelected?: boolean;
   className?: string;
 }
@@ -63,6 +64,7 @@ function formatEntryDate(date: Date): { relative: string; absolute: string } {
 export function JournalCard({
   entry,
   onClick,
+  onDelete,
   isSelected = false,
   className = '',
 }: JournalCardProps) {
@@ -86,9 +88,43 @@ export function JournalCard({
       `}
       title={dateInfo.absolute}
     >
+      {/* Delete button - positioned absolutely */}
+      {onDelete && (
+        <button
+          onClick={e => {
+            e.stopPropagation(); // Prevent card click
+            onDelete(entry);
+          }}
+          className='
+            absolute top-3 right-3 opacity-0 group-hover:opacity-100
+            p-2 rounded-full text-gray-500 hover:text-white hover:bg-red-500
+            dark:text-gray-400 dark:hover:text-white dark:hover:bg-red-600
+            cursor-pointer transition-all duration-200 focus:opacity-100 focus:outline-none
+            focus:ring-2 focus:ring-red-500 focus:ring-offset-2
+            shadow-sm hover:shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600
+          '
+          title='Delete entry'
+          aria-label={`Delete entry: ${entry.title || 'Untitled Entry'}`}
+        >
+          <svg
+            className='w-4 h-4'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16'
+            />
+          </svg>
+        </button>
+      )}
+
       {/* Header with title and date */}
       <div className='flex items-start justify-between mb-2'>
-        <div className='flex-1 min-w-0'>
+        <div className='flex-1 min-w-0 pr-12'>
           <h3
             className={`
             text-sm font-medium truncate transition-colors duration-200

@@ -140,7 +140,7 @@ export default function JournalEntryPage() {
                 ${
                   isLoading || !hasUnsavedChanges
                     ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-green-600 text-white hover:bg-green-700 cursor-pointer'
                 }
               `}
             >
@@ -151,7 +151,7 @@ export default function JournalEntryPage() {
           <button
             onClick={handleEditModeToggle}
             className={`
-              px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
+              px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 cursor-pointer
               ${
                 isEditMode
                   ? 'bg-gray-600 text-white hover:bg-gray-700'

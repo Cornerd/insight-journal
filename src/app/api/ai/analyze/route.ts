@@ -148,7 +148,13 @@ export async function POST(
           summary: result.content.trim(),
           generatedAt: new Date().toISOString(),
           model: result.model,
-          tokenUsage: result.usage,
+          tokenUsage: result.usage
+            ? {
+                prompt: result.usage.prompt_tokens,
+                completion: result.usage.completion_tokens,
+                total: result.usage.total_tokens,
+              }
+            : undefined,
           type: analysisType,
           version,
         },

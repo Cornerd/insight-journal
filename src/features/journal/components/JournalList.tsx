@@ -33,15 +33,17 @@ export function JournalList({
   // Sort entries based on selected option
   const sortedEntries = useMemo(() => {
     const entriesCopy = [...entries];
-    
+
     switch (sortBy) {
       case 'newest':
-        return entriesCopy.sort((a, b) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        return entriesCopy.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
       case 'oldest':
-        return entriesCopy.sort((a, b) => 
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        return entriesCopy.sort(
+          (a, b) =>
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       case 'title':
         return entriesCopy.sort((a, b) => {
@@ -50,8 +52,9 @@ export function JournalList({
           return titleA.localeCompare(titleB);
         });
       case 'updated':
-        return entriesCopy.sort((a, b) => 
-          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+        return entriesCopy.sort(
+          (a, b) =>
+            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
         );
       default:
         return entriesCopy;
@@ -61,14 +64,18 @@ export function JournalList({
   // If no entries, show empty state
   if (entries.length === 0) {
     return (
-      <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+      <div
+        className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+      >
         <EmptyState onCreateFirst={onCreateFirst} />
       </div>
     );
   }
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+    >
       {/* Header */}
       <div className='flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700'>
         <div className='flex items-center space-x-3'>
@@ -84,7 +91,7 @@ export function JournalList({
           {/* Sort dropdown */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            onChange={e => setSortBy(e.target.value as SortOption)}
             className='
               text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1
               bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300
@@ -109,13 +116,18 @@ export function JournalList({
             '
             title={isCollapsed ? 'Expand list' : 'Collapse list'}
           >
-            <svg 
+            <svg
               className={`w-5 h-5 transition-transform duration-200 ${isCollapsed ? 'rotate-180' : ''}`}
-              fill='none' 
-              stroke='currentColor' 
+              fill='none'
+              stroke='currentColor'
               viewBox='0 0 24 24'
             >
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M19 9l-7 7-7-7'
+              />
             </svg>
           </button>
         </div>
@@ -125,7 +137,7 @@ export function JournalList({
       {!isCollapsed && (
         <div className='p-4'>
           <div className='space-y-3 max-h-96 overflow-y-auto'>
-            {sortedEntries.map((entry) => (
+            {sortedEntries.map(entry => (
               <JournalCard
                 key={entry.id}
                 entry={entry}
@@ -139,10 +151,14 @@ export function JournalList({
           <div className='mt-4 pt-3 border-t border-gray-100 dark:border-gray-700'>
             <div className='flex items-center justify-between text-xs text-gray-500 dark:text-gray-400'>
               <span>
-                Total: {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                Total: {entries.length}{' '}
+                {entries.length === 1 ? 'entry' : 'entries'}
               </span>
               <span>
-                {sortedEntries.reduce((total, entry) => total + entry.content.length, 0).toLocaleString()} characters
+                {sortedEntries
+                  .reduce((total, entry) => total + entry.content.length, 0)
+                  .toLocaleString()}{' '}
+                characters
               </span>
             </div>
           </div>

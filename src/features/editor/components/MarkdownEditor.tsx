@@ -21,7 +21,6 @@ export function MarkdownEditor({
     lastSaved,
     addEntry,
     updateEntry,
-    setCurrentEntry,
     loadEntries,
     clearError,
   } = useJournalStore();
@@ -232,17 +231,21 @@ export function MarkdownEditor({
 
           {lastSaved && (
             <span className='text-sm text-gray-500 dark:text-gray-400'>
-              Last saved: {
-                (() => {
-                  try {
-                    const date = lastSaved instanceof Date ? lastSaved : new Date(lastSaved);
-                    return date.toLocaleTimeString();
-                  } catch (error) {
-                    console.error('Error formatting lastSaved date:', error, lastSaved);
-                    return 'Unknown time';
-                  }
-                })()
-              }
+              Last saved:{' '}
+              {(() => {
+                try {
+                  const date =
+                    lastSaved instanceof Date ? lastSaved : new Date(lastSaved);
+                  return date.toLocaleTimeString();
+                } catch (error) {
+                  console.error(
+                    'Error formatting lastSaved date:',
+                    error,
+                    lastSaved
+                  );
+                  return 'Unknown time';
+                }
+              })()}
             </span>
           )}
 

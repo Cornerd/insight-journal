@@ -108,4 +108,9 @@ if (require.main === module) {
   cleanNext();
 }
 
-module.exports = { cleanNext, forceDeleteFile, forceDeleteDirectory, killNodeProcesses };
+module.exports = {
+  cleanNext,
+  forceDeleteFile,
+  forceDeleteDirectory,
+  killNodeProcesses,
+};

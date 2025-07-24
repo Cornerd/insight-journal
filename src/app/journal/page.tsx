@@ -3,11 +3,12 @@
 import { MarkdownEditor } from '@/features/editor/components/MarkdownEditor';
 import { JournalList } from '@/features/journal/components/JournalList';
 import { useJournalStore } from '@/shared/store/journalStore';
+import { JournalEntry } from '@/features/journal/types/journal.types';
 
 export default function JournalPage() {
   const { entries, currentEntry, setCurrentEntry } = useJournalStore();
 
-  const handleEntryClick = (entry: any) => {
+  const handleEntryClick = (entry: JournalEntry) => {
     setCurrentEntry(entry);
   };
 
@@ -34,7 +35,9 @@ export default function JournalPage() {
           </h2>
           <p className='text-gray-600 dark:text-gray-300 text-sm'>
             {currentEntry
-              ? `Created on ${new Date(currentEntry.createdAt).toLocaleDateString('en-US', {
+              ? `Created on ${new Date(
+                  currentEntry.createdAt
+                ).toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
@@ -45,8 +48,7 @@ export default function JournalPage() {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric',
-                })
-            }
+                })}
           </p>
         </div>
 

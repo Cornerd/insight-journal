@@ -39,7 +39,7 @@ function generatePreview(content: string, maxLength: number = 120): string {
     .replace(/\s+/g, ' ') // Normalize whitespace
     .trim();
 
-  return cleanContent.length > maxLength 
+  return cleanContent.length > maxLength
     ? cleanContent.substring(0, maxLength - 3) + '...'
     : cleanContent;
 }
@@ -52,22 +52,24 @@ function formatEntryDate(date: Date): { relative: string; absolute: string } {
   const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
   return {
-    relative: diffInHours < 24 
-      ? formatDistanceToNow(date, { addSuffix: true })
-      : format(date, 'MMM d, yyyy'),
-    absolute: format(date, 'EEEE, MMMM d, yyyy \'at\' h:mm a'),
+    relative:
+      diffInHours < 24
+        ? formatDistanceToNow(date, { addSuffix: true })
+        : format(date, 'MMM d, yyyy'),
+    absolute: format(date, "EEEE, MMMM d, yyyy 'at' h:mm a"),
   };
 }
 
-export function JournalCard({ 
-  entry, 
-  onClick, 
-  isSelected = false, 
-  className = '' 
+export function JournalCard({
+  entry,
+  onClick,
+  isSelected = false,
+  className = '',
 }: JournalCardProps) {
   const preview = generatePreview(entry.content);
   const dateInfo = formatEntryDate(new Date(entry.createdAt));
-  const isUpdated = new Date(entry.updatedAt).getTime() !== new Date(entry.createdAt).getTime();
+  const isUpdated =
+    new Date(entry.updatedAt).getTime() !== new Date(entry.createdAt).getTime();
 
   return (
     <div
@@ -75,9 +77,10 @@ export function JournalCard({
       className={`
         group relative cursor-pointer rounded-lg border p-4 transition-all duration-200
         hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600
-        ${isSelected 
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md' 
-          : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
+        ${
+          isSelected
+            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md'
+            : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750'
         }
         ${className}
       `}
@@ -86,36 +89,45 @@ export function JournalCard({
       {/* Header with title and date */}
       <div className='flex items-start justify-between mb-2'>
         <div className='flex-1 min-w-0'>
-          <h3 className={`
+          <h3
+            className={`
             text-sm font-medium truncate transition-colors duration-200
-            ${isSelected 
-              ? 'text-blue-900 dark:text-blue-100' 
-              : 'text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300'
+            ${
+              isSelected
+                ? 'text-blue-900 dark:text-blue-100'
+                : 'text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300'
             }
-          `}>
+          `}
+          >
             {entry.title || 'Untitled Entry'}
           </h3>
         </div>
-        
+
         <div className='flex flex-col items-end ml-3 flex-shrink-0'>
-          <time className={`
+          <time
+            className={`
             text-xs transition-colors duration-200
-            ${isSelected 
-              ? 'text-blue-700 dark:text-blue-300' 
-              : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
+            ${
+              isSelected
+                ? 'text-blue-700 dark:text-blue-300'
+                : 'text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400'
             }
-          `}>
+          `}
+          >
             {dateInfo.relative}
           </time>
-          
+
           {isUpdated && (
-            <span className={`
+            <span
+              className={`
               text-xs mt-1 transition-colors duration-200
-              ${isSelected 
-                ? 'text-blue-600 dark:text-blue-400' 
-                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+              ${
+                isSelected
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
               }
-            `}>
+            `}
+            >
               (edited)
             </span>
           )}
@@ -123,13 +135,16 @@ export function JournalCard({
       </div>
 
       {/* Content preview */}
-      <p className={`
+      <p
+        className={`
         text-sm leading-relaxed transition-colors duration-200
-        ${isSelected 
-          ? 'text-blue-800 dark:text-blue-200' 
-          : 'text-gray-600 dark:text-gray-300 group-hover:text-gray-700 dark:group-hover:text-gray-200'
+        ${
+          isSelected
+            ? 'text-blue-800 dark:text-blue-200'
+            : 'text-gray-600 dark:text-gray-300 group-hover:text-gray-700 dark:group-hover:text-gray-200'
         }
-      `}>
+      `}
+      >
         {preview}
       </p>
 
@@ -137,24 +152,31 @@ export function JournalCard({
       <div className='flex items-center justify-between mt-3 pt-2 border-t border-gray-100 dark:border-gray-700'>
         <div className='flex items-center space-x-2'>
           {/* Word count */}
-          <span className={`
+          <span
+            className={`
             text-xs transition-colors duration-200
-            ${isSelected 
-              ? 'text-blue-600 dark:text-blue-400' 
-              : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+            ${
+              isSelected
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
             }
-          `}>
-            {entry.content.split(/\s+/).filter(word => word.length > 0).length} words
+          `}
+          >
+            {entry.content.split(/\s+/).filter(word => word.length > 0).length}{' '}
+            words
           </span>
-          
+
           {/* Character count */}
-          <span className={`
+          <span
+            className={`
             text-xs transition-colors duration-200
-            ${isSelected 
-              ? 'text-blue-600 dark:text-blue-400' 
-              : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
+            ${
+              isSelected
+                ? 'text-blue-600 dark:text-blue-400'
+                : 'text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400'
             }
-          `}>
+          `}
+          >
             • {entry.content.length} chars
           </span>
         </div>
@@ -163,7 +185,11 @@ export function JournalCard({
         {isSelected && (
           <div className='flex items-center space-x-1 text-blue-600 dark:text-blue-400'>
             <svg className='w-4 h-4' fill='currentColor' viewBox='0 0 20 20'>
-              <path fillRule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clipRule='evenodd' />
+              <path
+                fillRule='evenodd'
+                d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
+                clipRule='evenodd'
+              />
             </svg>
             <span className='text-xs font-medium'>Selected</span>
           </div>
@@ -171,13 +197,16 @@ export function JournalCard({
       </div>
 
       {/* Hover effect overlay */}
-      <div className={`
+      <div
+        className={`
         absolute inset-0 rounded-lg pointer-events-none transition-opacity duration-200
-        ${isSelected 
-          ? 'opacity-0' 
-          : 'opacity-0 group-hover:opacity-5 bg-blue-500'
+        ${
+          isSelected
+            ? 'opacity-0'
+            : 'opacity-0 group-hover:opacity-5 bg-blue-500'
         }
-      `} />
+      `}
+      />
     </div>
   );
 }

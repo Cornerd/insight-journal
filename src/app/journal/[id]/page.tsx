@@ -15,7 +15,7 @@ import { MarkdownEditor } from '@/features/editor/components/MarkdownEditor';
 export default function JournalEntryPage() {
   const params = useParams();
   const router = useRouter();
-  const { entries, setCurrentEntry, currentEntry } = useJournalStore();
+  const { entries, setCurrentEntry } = useJournalStore();
   const [isEditMode, setIsEditMode] = useState(false);
   const [entry, setEntry] = useState(null);
 
@@ -40,8 +40,10 @@ export default function JournalEntryPage() {
         <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
           <div className='flex items-center justify-center py-12'>
             <div className='text-center'>
-              <div className='w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
-              <p className='text-gray-600 dark:text-gray-300'>Loading entry...</p>
+              <div className='w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4' />
+              <p className='text-gray-600 dark:text-gray-300'>
+                Loading entry...
+              </p>
             </div>
           </div>
         </div>
@@ -61,8 +63,18 @@ export default function JournalEntryPage() {
             hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200
           '
         >
-          <svg className='w-4 h-4 mr-2' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
+          <svg
+            className='w-4 h-4 mr-2'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M15 19l-7-7 7-7'
+            />
           </svg>
           Back to Journal
         </Link>
@@ -72,9 +84,10 @@ export default function JournalEntryPage() {
             onClick={() => setIsEditMode(!isEditMode)}
             className={`
               px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200
-              ${isEditMode
-                ? 'bg-green-600 text-white hover:bg-green-700'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+              ${
+                isEditMode
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
               }
             `}
           >
@@ -90,32 +103,78 @@ export default function JournalEntryPage() {
           <h1 className='text-2xl font-bold text-gray-900 dark:text-white mb-2'>
             {entry.title || 'Untitled Entry'}
           </h1>
-          
+
           <div className='flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400'>
             <div className='flex items-center space-x-1'>
-              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' />
+              <svg
+                className='w-4 h-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+                />
               </svg>
-              <span>Created: {format(new Date(entry.createdAt), 'EEEE, MMMM d, yyyy \'at\' h:mm a')}</span>
+              <span>
+                Created:{' '}
+                {format(
+                  new Date(entry.createdAt),
+                  "EEEE, MMMM d, yyyy 'at' h:mm a"
+                )}
+              </span>
             </div>
-            
-            {new Date(entry.updatedAt).getTime() !== new Date(entry.createdAt).getTime() && (
+
+            {new Date(entry.updatedAt).getTime() !==
+              new Date(entry.createdAt).getTime() && (
               <div className='flex items-center space-x-1'>
-                <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                <svg
+                  className='w-4 h-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                  />
                 </svg>
-                <span>Updated: {format(new Date(entry.updatedAt), 'EEEE, MMMM d, yyyy \'at\' h:mm a')}</span>
+                <span>
+                  Updated:{' '}
+                  {format(
+                    new Date(entry.updatedAt),
+                    "EEEE, MMMM d, yyyy 'at' h:mm a"
+                  )}
+                </span>
               </div>
             )}
           </div>
 
           {/* Entry Stats */}
           <div className='flex items-center space-x-4 mt-3 text-xs text-gray-400 dark:text-gray-500'>
-            <span>{entry.content.split(/\s+/).filter(word => word.length > 0).length} words</span>
+            <span>
+              {
+                entry.content.split(/\s+/).filter(word => word.length > 0)
+                  .length
+              }{' '}
+              words
+            </span>
             <span>•</span>
             <span>{entry.content.length} characters</span>
             <span>•</span>
-            <span>~{Math.ceil(entry.content.split(/\s+/).filter(word => word.length > 0).length / 200)} min read</span>
+            <span>
+              ~
+              {Math.ceil(
+                entry.content.split(/\s+/).filter(word => word.length > 0)
+                  .length / 200
+              )}{' '}
+              min read
+            </span>
           </div>
         </div>
 
@@ -127,7 +186,8 @@ export default function JournalEntryPage() {
                 Edit Entry
               </h3>
               <p className='text-sm text-gray-600 dark:text-gray-300'>
-                Make changes to your journal entry. Changes will be saved automatically.
+                Make changes to your journal entry. Changes will be saved
+                automatically.
               </p>
             </div>
             <MarkdownEditor />
@@ -139,12 +199,12 @@ export default function JournalEntryPage() {
                 Entry Content
               </h3>
             </div>
-            
+
             {/* Rendered Markdown Content */}
             <div className='prose prose-gray dark:prose-invert max-w-none'>
-              <div 
+              <div
                 className='markdown-content'
-                dangerouslySetInnerHTML={{ 
+                dangerouslySetInnerHTML={{
                   __html: entry.content
                     .replace(/\n/g, '<br>')
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -152,17 +212,19 @@ export default function JournalEntryPage() {
                     .replace(/`(.*?)`/g, '<code>$1</code>')
                     .replace(/^# (.*$)/gim, '<h1>$1</h1>')
                     .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                    .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                    .replace(/^### (.*$)/gim, '<h3>$1</h3>'),
                 }}
               />
             </div>
 
             {/* Raw content fallback if no formatting */}
-            {!entry.content.includes('*') && !entry.content.includes('#') && !entry.content.includes('`') && (
-              <div className='whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed'>
-                {entry.content}
-              </div>
-            )}
+            {!entry.content.includes('*') &&
+              !entry.content.includes('#') &&
+              !entry.content.includes('`') && (
+                <div className='whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed'>
+                  {entry.content}
+                </div>
+              )}
           </div>
         )}
       </div>

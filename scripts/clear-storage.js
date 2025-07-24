@@ -9,7 +9,7 @@ console.log('🧹 Clearing localStorage for development...');
 const keysToRemove = [
   'journal-store',
   'insight-journal-data',
-  'journal-editor-storage'
+  'journal-editor-storage',
 ];
 
 keysToRemove.forEach(key => {

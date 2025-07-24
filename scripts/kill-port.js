@@ -8,18 +8,18 @@ const { execSync } = require('child_process');
 function killProcessOnPort(port) {
   try {
     console.log(`🔍 Checking for processes on port ${port}...`);
-    
+
     // Find process using the port
-    const result = execSync(`netstat -ano | findstr :${port}`, { 
+    const result = execSync(`netstat -ano | findstr :${port}`, {
       encoding: 'utf8',
-      stdio: 'pipe'
+      stdio: 'pipe',
     });
-    
+
     if (result) {
       // Extract PID from netstat output
       const lines = result.split('\n').filter(line => line.trim());
       const pids = new Set();
-      
+
       lines.forEach(line => {
         const parts = line.trim().split(/\s+/);
         if (parts.length >= 5) {
@@ -29,7 +29,7 @@ function killProcessOnPort(port) {
           }
         }
       });
-      
+
       // Kill each unique PID
       pids.forEach(pid => {
         try {
@@ -39,7 +39,7 @@ function killProcessOnPort(port) {
           console.log(`✗ Failed to kill process ${pid}: ${error.message}`);
         }
       });
-      
+
       if (pids.size === 0) {
         console.log(`ℹ️ No processes found on port ${port}`);
       }
@@ -53,14 +53,14 @@ function killProcessOnPort(port) {
 
 function killCommonPorts() {
   console.log('🔪 Killing processes on common development ports...');
-  
+
   // Common Next.js development ports
   const ports = [3000, 3001, 3002, 3003, 3004, 3005];
-  
+
   ports.forEach(port => {
     killProcessOnPort(port);
   });
-  
+
   console.log('✅ Port cleanup completed!');
 }
 

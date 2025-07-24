@@ -60,17 +60,20 @@ function deserializeData(data: string): StorageData {
   try {
     const parsed = JSON.parse(data, (key, value) => {
       // Convert ISO strings back to Date objects
-      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)) {
+      if (
+        typeof value === 'string' &&
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
+      ) {
         return new Date(value);
       }
       return value;
     });
-    
+
     // Validate the structure
     if (!parsed.version || !Array.isArray(parsed.entries)) {
       throw new Error('Invalid storage data structure');
     }
-    
+
     return parsed as StorageData;
   } catch (error) {
     throw new StorageError(
@@ -111,7 +114,7 @@ function loadStorageData(): StorageResult<StorageData> {
     }
 
     const rawData = localStorage.getItem(STORAGE_KEY);
-    
+
     if (!rawData) {
       // Return initial data if nothing is stored
       return {
@@ -121,7 +124,7 @@ function loadStorageData(): StorageResult<StorageData> {
     }
 
     const data = deserializeData(rawData);
-    
+
     return {
       success: true,
       data,
@@ -133,7 +136,7 @@ function loadStorageData(): StorageResult<StorageData> {
         error,
       };
     }
-    
+
     return {
       success: false,
       error: new StorageError(
@@ -161,7 +164,7 @@ function saveStorageData(data: StorageData): StorageResult<void> {
     }
 
     const serializedData = serializeData(data);
-    
+
     try {
       localStorage.setItem(STORAGE_KEY, serializedData);
     } catch (error) {
@@ -190,7 +193,7 @@ function saveStorageData(data: StorageData): StorageResult<void> {
         error,
       };
     }
-    
+
     return {
       success: false,
       error: new StorageError(
@@ -209,10 +212,10 @@ function generateTitle(content: string): string {
   if (!content.trim()) {
     return 'Untitled Entry';
   }
-  
+
   // Try to get the first line
   const firstLine = content.split('\n')[0].trim();
-  
+
   if (firstLine) {
     // Remove markdown formatting for title
     const cleanTitle = firstLine
@@ -221,16 +224,14 @@ function generateTitle(content: string): string {
       .replace(/\*(.*?)\*/g, '$1') // Remove italic
       .replace(/`(.*?)`/g, '$1') // Remove code
       .trim();
-    
-    return cleanTitle.length > 50 
+
+    return cleanTitle.length > 50
       ? cleanTitle.substring(0, 47) + '...'
       : cleanTitle;
   }
-  
+
   // Fallback to first 50 characters
-  return content.length > 50 
-    ? content.substring(0, 47) + '...'
-    : content;
+  return content.length > 50 ? content.substring(0, 47) + '...' : content;
 }
 
 /**
@@ -242,11 +243,11 @@ export const storageService = {
    */
   async getEntries(): Promise<StorageResult<JournalEntry[]>> {
     const result = loadStorageData();
-    
+
     if (!result.success) {
       return result;
     }
-    
+
     return {
       success: true,
       data: result.data.entries,
@@ -258,13 +259,13 @@ export const storageService = {
    */
   async getEntry(id: string): Promise<StorageResult<JournalEntry>> {
     const result = loadStorageData();
-    
+
     if (!result.success) {
       return result;
     }
-    
+
     const entry = result.data.entries.find(e => e.id === id);
-    
+
     if (!entry) {
       return {
         success: false,
@@ -274,7 +275,7 @@ export const storageService = {
         ),
       };
     }
-    
+
     return {
       success: true,
       data: entry,
@@ -284,13 +285,15 @@ export const storageService = {
   /**
    * Save a new journal entry
    */
-  async saveEntry(input: CreateJournalEntryInput): Promise<StorageResult<JournalEntry>> {
+  async saveEntry(
+    input: CreateJournalEntryInput
+  ): Promise<StorageResult<JournalEntry>> {
     const loadResult = loadStorageData();
-    
+
     if (!loadResult.success) {
       return loadResult;
     }
-    
+
     const now = new Date();
     const newEntry: JournalEntry = {
       id: nanoid(),
@@ -299,7 +302,7 @@ export const storageService = {
       createdAt: now,
       updatedAt: now,
     };
-    
+
     const updatedData: StorageData = {
       ...loadResult.data,
       entries: [...loadResult.data.entries, newEntry],
@@ -309,13 +312,13 @@ export const storageService = {
         totalEntries: loadResult.data.metadata.totalEntries + 1,
       },
     };
-    
+
     const saveResult = saveStorageData(updatedData);
-    
+
     if (!saveResult.success) {
       return saveResult;
     }
-    
+
     return {
       success: true,
       data: newEntry,
@@ -325,15 +328,19 @@ export const storageService = {
   /**
    * Update an existing journal entry
    */
-  async updateEntry(input: UpdateJournalEntryInput): Promise<StorageResult<JournalEntry>> {
+  async updateEntry(
+    input: UpdateJournalEntryInput
+  ): Promise<StorageResult<JournalEntry>> {
     const loadResult = loadStorageData();
-    
+
     if (!loadResult.success) {
       return loadResult;
     }
-    
-    const entryIndex = loadResult.data.entries.findIndex(e => e.id === input.id);
-    
+
+    const entryIndex = loadResult.data.entries.findIndex(
+      e => e.id === input.id
+    );
+
     if (entryIndex === -1) {
       return {
         success: false,
@@ -343,20 +350,22 @@ export const storageService = {
         ),
       };
     }
-    
+
     const existingEntry = loadResult.data.entries[entryIndex];
     const now = new Date();
-    
+
     const updatedEntry: JournalEntry = {
       ...existingEntry,
       content: input.content ?? existingEntry.content,
-      title: input.title ?? (input.content ? generateTitle(input.content) : existingEntry.title),
+      title:
+        input.title ??
+        (input.content ? generateTitle(input.content) : existingEntry.title),
       updatedAt: now,
     };
-    
+
     const updatedEntries = [...loadResult.data.entries];
     updatedEntries[entryIndex] = updatedEntry;
-    
+
     const updatedData: StorageData = {
       ...loadResult.data,
       entries: updatedEntries,
@@ -365,13 +374,13 @@ export const storageService = {
         lastSync: now,
       },
     };
-    
+
     const saveResult = saveStorageData(updatedData);
-    
+
     if (!saveResult.success) {
       return saveResult;
     }
-    
+
     return {
       success: true,
       data: updatedEntry,
@@ -383,13 +392,13 @@ export const storageService = {
    */
   async deleteEntry(id: string): Promise<StorageResult<void>> {
     const loadResult = loadStorageData();
-    
+
     if (!loadResult.success) {
       return loadResult;
     }
-    
+
     const entryExists = loadResult.data.entries.some(e => e.id === id);
-    
+
     if (!entryExists) {
       return {
         success: false,
@@ -399,7 +408,7 @@ export const storageService = {
         ),
       };
     }
-    
+
     const updatedData: StorageData = {
       ...loadResult.data,
       entries: loadResult.data.entries.filter(e => e.id !== id),
@@ -408,7 +417,7 @@ export const storageService = {
         lastSync: new Date(),
       },
     };
-    
+
     return saveStorageData(updatedData);
   },
 
@@ -423,13 +432,15 @@ export const storageService = {
   /**
    * Get storage statistics
    */
-  async getStorageStats(): Promise<StorageResult<{ totalEntries: number; lastSync: Date }>> {
+  async getStorageStats(): Promise<
+    StorageResult<{ totalEntries: number; lastSync: Date }>
+  > {
     const result = loadStorageData();
-    
+
     if (!result.success) {
       return result;
     }
-    
+
     return {
       success: true,
       data: {

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "npm run clean:trace && next dev",
+    "dev:safe": "node -e \"const fs = require('fs'); try { if (fs.existsSync('.next/trace')) { require('child_process').execSync('del /f /q \\\".next\\\\trace\\\"', {stdio: 'ignore'}); } } catch(e) {}\" && next dev",
     "dev:force": "npm run clean:next && next dev",
+    "dev:windows": "node scripts/clean-windows.js && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -12,14 +14,17 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "tsc --noEmit",
-    "clean:trace": "node -e \"try { require('fs').unlinkSync('.next/trace'); } catch(e) {}\"",
-    "clean:next": "node -e \"try { require('fs').rmSync('.next', {recursive: true, force: true}); } catch(e) {}\"",
+    "clean:trace": "node -e \"const fs = require('fs'); const path = require('path'); try { if (fs.existsSync('.next/trace')) { fs.chmodSync('.next/trace', 0o666); fs.unlinkSync('.next/trace'); } } catch(e) { console.log('Trace cleanup:', e.message); }\"",
+    "clean:next": "node -e \"const fs = require('fs'); try { if (fs.existsSync('.next')) { fs.rmSync('.next', {recursive: true, force: true, maxRetries: 3, retryDelay: 100}); } } catch(e) { console.log('Next cleanup:', e.message); }\"",
+    "clean:windows": "node scripts/clean-windows.js",
     "prepare": "husky"
   },
   "dependencies": {
+    "@uiw/react-md-editor": "^4.0.8",
     "next": "15.4.2",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -74,7 +74,9 @@ export function validateOpenAIConfig(): {
 
   // Get model from environment or use default
   const model = process.env.OPENAI_MODEL || DEFAULT_OPENAI_CONFIG.model;
-  if (!Object.values(OPENAI_MODELS).includes(model as keyof typeof OPENAI_MODELS)) {
+  if (
+    !Object.values(OPENAI_MODELS).includes(model as keyof typeof OPENAI_MODELS)
+  ) {
     errors.push(
       `Invalid OPENAI_MODEL: ${model}. Must be one of: ${Object.values(OPENAI_MODELS).join(', ')}`
     );

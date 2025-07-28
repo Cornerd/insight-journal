@@ -249,7 +249,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         contentPreview: content.substring(0, 50) + '...',
       });
 
-      const { entries, updateEntry } = useJournalStore.getState();
+      const { entries } = useJournalStore.getState();
 
       // Check if we already have cached analysis for this entry
       const existingEntry = entries.find(e => e.id === entryId);

@@ -95,7 +95,8 @@ export async function POST(request: NextRequest) {
       });
     } finally {
       // Restore original provider
-      (aiConfig as typeof aiConfig & { provider: string }).provider = originalProvider;
+      (aiConfig as typeof aiConfig & { provider: string }).provider =
+        originalProvider;
     }
   } catch (error) {
     console.error('AI Provider Test Error:', error);

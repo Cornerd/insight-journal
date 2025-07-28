@@ -19,14 +19,37 @@ if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
 }
 
 /**
- * OpenAI Configuration
+ * AI Model Configuration
+ * Supports multiple providers: OpenAI, Gemini, Ollama
  */
-export const openaiConfig = {
-  apiKey: process.env.OPENAI_API_KEY || '',
-  organizationId: process.env.OPENAI_ORG_ID,
-  model: process.env.OPENAI_MODEL || 'gpt-4',
-  baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+export const aiConfig = {
+  // Provider selection: 'openai' | 'gemini' | 'ollama'
+  provider: process.env.AI_PROVIDER || (process.env.NODE_ENV === 'development' ? 'ollama' : 'gemini'),
+
+  // OpenAI Configuration
+  openai: {
+    apiKey: process.env.OPENAI_API_KEY || '',
+    organizationId: process.env.OPENAI_ORG_ID,
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+  },
+
+  // Google Gemini Configuration
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || '',
+    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+  },
+
+  // Ollama Configuration (Local)
+  ollama: {
+    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434',
+    model: process.env.OLLAMA_MODEL || 'llama3.1:8b',
+  },
 } as const;
+
+// Legacy OpenAI config for backward compatibility
+export const openaiConfig = aiConfig.openai;
 
 /**
  * Application Configuration

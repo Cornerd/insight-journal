@@ -73,7 +73,7 @@ An AI-powered personal journaling application built with Next.js 15, React 19, a
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `OPENAI_ORG_ID` | OpenAI Organization ID | - |
-| `OPENAI_MODEL` | Default OpenAI model | `gpt-4` |
+| `OPENAI_MODEL` | Default OpenAI model | `gpt-4o-mini` |
 | `DEBUG` | Enable debug logging | `false` |
 | `VERBOSE_LOGGING` | Enable verbose logging | `false` |
 

@@ -4,10 +4,13 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createChatCompletion } from '@/features/ai-insights/services/openaiService';
-import { isOpenAIConfigured } from '@/config/openai';
+import { createChatCompletion } from '@/features/ai-insights/services/aiService';
+import { aiConfig } from '@/config/env';
 import {
   createSummarizationPrompt,
+  createEmotionAnalysisPrompt,
+  createFullAnalysisPrompt,
+  createSuggestionsPrompt,
   validatePromptInput,
   getPromptConfig,
   getPromptVersion,
@@ -15,17 +18,63 @@ import {
 } from '@/features/ai-insights/services/promptTemplates';
 import { processOpenAIError } from '@/shared/lib/api/errors';
 
+// Helper functions for data normalization
+function getEmotionEmoji(emotion: string): string {
+  const emojiMap: Record<string, string> = {
+    'happy': '😊', 'joy': '😄', 'excited': '🤩', 'content': '😌',
+    'sad': '😢', 'disappointed': '😞', 'melancholy': '😔',
+    'angry': '😠', 'frustrated': '😤', 'annoyed': '😒',
+    'anxious': '😰', 'worried': '😟', 'nervous': '😬',
+    'calm': '😌', 'peaceful': '☮️', 'relaxed': '😎',
+    'grateful': '🙏', 'thankful': '🙏', 'appreciative': '🙏',
+    'confident': '💪', 'proud': '🏆', 'accomplished': '✨',
+    'curious': '🤔', 'interested': '👀', 'engaged': '🎯'
+  };
+  return emojiMap[emotion.toLowerCase()] || '😐';
+}
+
+function getEmotionCategory(emotion: string): 'positive' | 'negative' | 'neutral' {
+  const positiveEmotions = ['happy', 'joy', 'excited', 'content', 'grateful', 'thankful', 'confident', 'proud', 'accomplished', 'calm', 'peaceful', 'relaxed'];
+  const negativeEmotions = ['sad', 'disappointed', 'melancholy', 'angry', 'frustrated', 'annoyed', 'anxious', 'worried', 'nervous'];
+
+  const emotionLower = emotion.toLowerCase();
+  if (positiveEmotions.includes(emotionLower)) return 'positive';
+  if (negativeEmotions.includes(emotionLower)) return 'negative';
+  return 'neutral';
+}
+
 // Request/Response types
 interface AnalyzeRequest {
   content: string;
   entryId: string;
-  type?: 'summary';
+  type?: 'summary' | 'emotion' | 'full' | 'suggestions';
+}
+
+interface EmotionData {
+  name: string;
+  intensity: number;
+  emoji: string;
+  category: 'positive' | 'negative' | 'neutral';
+}
+
+interface SuggestionData {
+  id: string;
+  category: 'wellness' | 'productivity' | 'reflection' | 'mindfulness' | 'social' | 'physical';
+  title: string;
+  description: string;
+  actionable: boolean;
+  priority: 'low' | 'medium' | 'high';
+  icon: string;
 }
 
 interface AnalyzeResponse {
   success: boolean;
   analysis?: {
-    summary: string;
+    summary?: string;
+    sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed';
+    emotions?: EmotionData[];
+    suggestions?: SuggestionData[];
+    confidence?: number;
     generatedAt: string;
     model: string;
     tokenUsage?: {
@@ -44,13 +93,25 @@ export async function POST(
   request: NextRequest
 ): Promise<NextResponse<AnalyzeResponse>> {
   try {
-    // Check if OpenAI is configured
-    if (!isOpenAIConfigured()) {
+    // Check if AI service is configured
+    const isConfigured = () => {
+      switch (aiConfig.provider) {
+        case 'openai':
+          return !!aiConfig.openai.apiKey && aiConfig.openai.apiKey !== '';
+        case 'gemini':
+          return !!aiConfig.gemini.apiKey && aiConfig.gemini.apiKey !== 'your-gemini-api-key-here';
+        case 'ollama':
+          return true; // Ollama doesn't need API keys
+        default:
+          return false;
+      }
+    };
+
+    if (!isConfigured()) {
       return NextResponse.json(
         {
           success: false,
-          error:
-            'AI analysis is not available. OpenAI API key is not configured.',
+          error: `AI service (${aiConfig.provider}) is not configured. Please check your API keys.`,
         },
         { status: 503 }
       );
@@ -93,11 +154,11 @@ export async function POST(
 
     // Default to summary analysis
     const analysisType = body.type || 'summary';
-    if (analysisType !== 'summary') {
+    if (!['summary', 'emotion', 'full', 'suggestions'].includes(analysisType)) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Only summary analysis is currently supported.',
+          error: 'Analysis type must be one of: summary, emotion, full, suggestions.',
         },
         { status: 400 }
       );
@@ -127,25 +188,156 @@ export async function POST(
       );
     }
 
-    // Create prompt and get configuration
-    const messages = createSummarizationPrompt(body.content);
-    const config = getPromptConfig('summarization');
-    const version = getPromptVersion('summarization');
+    // Create prompt based on analysis type
+    let messages;
+    let config;
+    let version;
 
-    // Call OpenAI API
-    const result = await createChatCompletion({
-      messages,
-      model: config.model,
+    switch (analysisType) {
+      case 'summary':
+        messages = createSummarizationPrompt(body.content);
+        config = getPromptConfig('summarization');
+        version = getPromptVersion('summarization');
+        break;
+      case 'emotion':
+        messages = createEmotionAnalysisPrompt(body.content);
+        config = getPromptConfig('emotion');
+        version = getPromptVersion('emotion');
+        break;
+      case 'full':
+        messages = createFullAnalysisPrompt(body.content);
+        config = getPromptConfig('full');
+        version = getPromptVersion('full');
+        break;
+      case 'suggestions':
+        messages = createSuggestionsPrompt(body.content);
+        config = getPromptConfig('suggestions');
+        version = getPromptVersion('suggestions');
+        break;
+      default:
+        throw new Error(`Unsupported analysis type: ${analysisType}`);
+    }
+
+    // Call AI API (supports OpenAI, Gemini, Ollama)
+    // Note: model is automatically selected based on AI provider, ignore config.model
+    const result = await createChatCompletion(messages, {
       temperature: config.temperature,
       maxTokens: config.maxTokens,
     });
+
+    // Parse response based on analysis type
+    let analysisData: any = {};
+
+    if (analysisType === 'summary') {
+      analysisData.summary = result.content.trim();
+    } else if (analysisType === 'emotion' || analysisType === 'full' || analysisType === 'suggestions') {
+      try {
+        // Clean up the response - remove markdown code blocks if present
+        let cleanContent = result.content.trim();
+
+        // Remove ```json and ``` markers
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+
+        const parsedResult = JSON.parse(cleanContent.trim());
+
+        // Helper function to normalize emotions format
+        const normalizeEmotions = (emotions: unknown) => {
+          if (!emotions) return undefined;
+          if (Array.isArray(emotions)) {
+            return emotions.map((emotion) => {
+              if (typeof emotion === 'string') {
+                // Convert string to expected object format
+                return {
+                  name: emotion,
+                  intensity: 0.7, // Default intensity
+                  emoji: getEmotionEmoji(emotion),
+                  category: getEmotionCategory(emotion),
+                };
+              }
+              // If already an object, ensure it has required fields
+              return {
+                name: emotion.name || emotion,
+                intensity: emotion.intensity || 0.7,
+                emoji: emotion.emoji || getEmotionEmoji(emotion.name || emotion),
+                category: emotion.category || getEmotionCategory(emotion.name || emotion),
+              };
+            });
+          }
+          return undefined;
+        };
+
+        // Helper function to normalize suggestions format
+        const normalizeSuggestions = (suggestions: unknown) => {
+          if (!suggestions) return undefined;
+          if (Array.isArray(suggestions)) {
+            return suggestions.map((suggestion, index) => {
+              if (typeof suggestion === 'string') {
+                // Convert string to expected object format
+                return {
+                  id: `suggestion-${index}`,
+                  category: 'reflection' as const,
+                  title: suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion,
+                  description: suggestion,
+                  actionable: true,
+                  priority: 'medium' as const,
+                  icon: '💡',
+                };
+              }
+              // If already an object, ensure it has required fields
+              return {
+                id: suggestion.id || `suggestion-${index}`,
+                category: suggestion.category || 'reflection',
+                title: suggestion.title || suggestion.description?.substring(0, 50) || 'Suggestion',
+                description: suggestion.description || suggestion.title || suggestion,
+                actionable: suggestion.actionable !== undefined ? suggestion.actionable : true,
+                priority: suggestion.priority || 'medium',
+                icon: suggestion.icon || '💡',
+              };
+            });
+          }
+          return undefined;
+        };
+
+        if (analysisType === 'emotion') {
+          analysisData.sentiment = parsedResult.sentiment;
+          analysisData.emotions = normalizeEmotions(parsedResult.emotions);
+          analysisData.confidence = parsedResult.confidence;
+        } else if (analysisType === 'full') {
+          analysisData.summary = parsedResult.summary;
+          analysisData.sentiment = parsedResult.sentiment;
+          analysisData.emotions = normalizeEmotions(parsedResult.emotions);
+          analysisData.suggestions = normalizeSuggestions(parsedResult.suggestions);
+          analysisData.confidence = parsedResult.confidence;
+        } else if (analysisType === 'suggestions') {
+          analysisData.suggestions = normalizeSuggestions(parsedResult.suggestions);
+        }
+      } catch (parseError) {
+        console.error('Failed to parse AI response:', parseError);
+        console.error('Raw AI response:', result.content);
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to parse AI analysis response.',
+            debug: process.env.NODE_ENV === 'development' ? {
+              parseError: parseError instanceof Error ? parseError.message : String(parseError),
+              rawResponse: result.content.substring(0, 500) + '...'
+            } : undefined
+          },
+          { status: 500 }
+        );
+      }
+    }
 
     // Return successful analysis
     return NextResponse.json(
       {
         success: true,
         analysis: {
-          summary: result.content.trim(),
+          ...analysisData,
           generatedAt: new Date().toISOString(),
           model: result.model,
           tokenUsage: result.usage

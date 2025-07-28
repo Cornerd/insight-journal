@@ -60,9 +60,11 @@ function deserializeData(data: string): StorageData {
   try {
     const parsed = JSON.parse(data, (key, value) => {
       // Convert ISO strings back to Date objects
+      // Check for Date-related keys and ISO string format
       if (
         typeof value === 'string' &&
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value)
+        (key === 'createdAt' || key === 'updatedAt' || key === 'generatedAt') &&
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/.test(value)
       ) {
         return new Date(value);
       }
@@ -360,6 +362,7 @@ export const storageService = {
       title:
         input.title ??
         (input.content ? generateTitle(input.content) : existingEntry.title),
+      aiAnalysis: input.aiAnalysis ?? existingEntry.aiAnalysis,
       updatedAt: now,
     };
 

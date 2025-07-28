@@ -5,6 +5,10 @@
 
 import React from 'react';
 import { AIAnalysis } from '@/features/journal/types/journal.types';
+import { EmotionTags } from './EmotionTags';
+import { SuggestionsList } from './SuggestionsList';
+import { AIAnalysisLoading, AIAnalysisSkeleton } from '@/shared/components/feedback/LoadingSpinner';
+import { AIErrorDisplay } from './AIErrorDisplay';
 
 interface AIAnalysisCardProps {
   /** AI analysis data */
@@ -13,6 +17,8 @@ interface AIAnalysisCardProps {
   isLoading: boolean;
   /** Error message */
   error?: string | null;
+  /** Error type for specific handling */
+  errorType?: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
   /** Callback to retry analysis */
   onRetry?: () => void;
   /** Callback to clear error */
@@ -25,97 +31,38 @@ export function AIAnalysisCard({
   analysis,
   isLoading,
   error,
+  errorType,
   onRetry,
   onClearError,
   className = '',
 }: AIAnalysisCardProps) {
+  // Debug logging
+  console.log('AIAnalysisCard render:', {
+    hasAnalysis: !!analysis,
+    isLoading,
+    hasError: !!error,
+    analysisType: analysis?.type,
+    analysisModel: analysis?.model,
+  });
   // Loading state
   if (isLoading) {
     return (
-      <div
-        className={`
-          bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700
-          p-6 shadow-sm ${className}
-        `}
-      >
-        <div className='flex items-center space-x-3'>
-          <div className='flex-shrink-0'>
-            <div className='w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin' />
-          </div>
-          <div>
-            <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-              AI Analysis
-            </h3>
-            <p className='text-sm text-gray-500 dark:text-gray-400'>
-              Generating insights from your journal entry...
-            </p>
-          </div>
-        </div>
-      </div>
+      <AIAnalysisLoading
+        stage="summary"
+        className={className}
+      />
     );
   }
 
   // Error state
   if (error) {
     return (
-      <div
-        className={`
-          bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800
-          p-6 ${className}
-        `}
-      >
-        <div className='flex items-start space-x-3'>
-          <div className='flex-shrink-0'>
-            <svg
-              className='w-5 h-5 text-red-600 dark:text-red-400'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-              />
-            </svg>
-          </div>
-          <div className='flex-1 min-w-0'>
-            <h3 className='text-sm font-medium text-red-800 dark:text-red-200'>
-              AI Analysis Failed
-            </h3>
-            <p className='text-sm text-red-700 dark:text-red-300 mt-1'>
-              {error}
-            </p>
-            <div className='flex space-x-3 mt-3'>
-              {onRetry && (
-                <button
-                  onClick={onRetry}
-                  className='
-                    text-sm font-medium text-red-800 dark:text-red-200
-                    hover:text-red-900 dark:hover:text-red-100
-                    cursor-pointer transition-colors duration-200
-                  '
-                >
-                  Try Again
-                </button>
-              )}
-              {onClearError && (
-                <button
-                  onClick={onClearError}
-                  className='
-                    text-sm font-medium text-red-600 dark:text-red-400
-                    hover:text-red-700 dark:hover:text-red-300
-                    cursor-pointer transition-colors duration-200
-                  '
-                >
-                  Dismiss
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      <AIErrorDisplay
+        error={error}
+        errorType={errorType || 'unknown'}
+        onRetry={onRetry}
+        className={className}
+      />
     );
   }
 
@@ -152,12 +99,44 @@ export function AIAnalysisCard({
           </div>
         </div>
         <div className='flex-1 min-w-0'>
-          <h3 className='text-sm font-semibold text-blue-900 dark:text-blue-100 mb-2'>
-            AI Summary
+          <h3 className='text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3'>
+            AI Analysis
           </h3>
-          <p className='text-sm text-blue-800 dark:text-blue-200 leading-relaxed mb-4'>
-            {analysis.summary}
-          </p>
+
+          {/* Summary Section */}
+          {analysis.summary && (
+            <div className="mb-4">
+              <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
+                Summary
+              </h4>
+              <p className='text-sm text-blue-800 dark:text-blue-200 leading-relaxed'>
+                {analysis.summary}
+              </p>
+            </div>
+          )}
+
+          {/* Emotion Analysis Section */}
+          {analysis.emotions && analysis.emotions.length > 0 && (
+            <div className="mb-4">
+              <EmotionTags
+                emotions={analysis.emotions}
+                sentiment={analysis.sentiment}
+                confidence={analysis.confidence}
+                showIntensity={true}
+              />
+            </div>
+          )}
+
+          {/* Suggestions Section */}
+          {analysis.suggestions && analysis.suggestions.length > 0 && (
+            <div className="mb-4">
+              <SuggestionsList
+                suggestions={analysis.suggestions}
+                showCategories={true}
+                compact={false}
+              />
+            </div>
+          )}
 
           {/* Analysis metadata */}
           <div className='flex items-center justify-between text-xs text-blue-600 dark:text-blue-400'>
@@ -166,9 +145,12 @@ export function AIAnalysisCard({
               {analysis.tokenUsage && (
                 <span>{analysis.tokenUsage.total} tokens</span>
               )}
+              {analysis.confidence && (
+                <span>{Math.round(analysis.confidence * 100)}% confidence</span>
+              )}
             </div>
-            <time dateTime={analysis.generatedAt.toISOString()}>
-              {formatAnalysisDate(analysis.generatedAt)}
+            <time dateTime={typeof analysis.generatedAt === 'string' ? analysis.generatedAt : analysis.generatedAt.toISOString()}>
+              {formatAnalysisDate(typeof analysis.generatedAt === 'string' ? new Date(analysis.generatedAt) : analysis.generatedAt)}
             </time>
           </div>
         </div>
@@ -180,9 +162,10 @@ export function AIAnalysisCard({
 /**
  * Format analysis generation date
  */
-function formatAnalysisDate(date: Date): string {
+function formatAnalysisDate(date: Date | string): string {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = now.getTime() - dateObj.getTime();
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
@@ -196,6 +179,6 @@ function formatAnalysisDate(date: Date): string {
   } else if (diffDays < 7) {
     return `${diffDays}d ago`;
   } else {
-    return date.toLocaleDateString();
+    return dateObj.toLocaleDateString();
   }
 }

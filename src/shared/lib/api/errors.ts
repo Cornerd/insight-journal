@@ -53,6 +53,14 @@ export function processOpenAIError(error: any): ProcessedOpenAIError {
           retryable: true,
         };
 
+      case 'insufficient_quota':
+        return {
+          type: 'quota_exceeded_error',
+          message: 'API quota exceeded. Please check your OpenAI account billing and add credits.',
+          originalError: error,
+          retryable: false,
+        };
+
       case 'invalid_request_error':
         return {
           type: 'validation_error',

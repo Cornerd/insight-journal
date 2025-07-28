@@ -7,7 +7,7 @@ import { OpenAIConfig } from '@/features/ai-insights/types/openai.types';
 
 // Default configuration values
 export const DEFAULT_OPENAI_CONFIG: Omit<OpenAIConfig, 'apiKey'> = {
-  model: 'gpt-3.5-turbo',
+  model: 'gpt-4o-mini',
   temperature: 0.7,
   maxTokens: 1000,
   timeout: 30000, // 30 seconds
@@ -18,6 +18,7 @@ export const OPENAI_MODELS = {
   GPT_3_5_TURBO: 'gpt-3.5-turbo',
   GPT_4: 'gpt-4',
   GPT_4_TURBO: 'gpt-4-turbo-preview',
+  GPT_4O_MINI: 'gpt-4o-mini',
 } as const;
 
 // Model configurations
@@ -36,6 +37,11 @@ export const MODEL_CONFIGS = {
     maxTokens: 128000,
     costPer1kTokens: 0.01,
     description: 'Latest model with large context window',
+  },
+  [OPENAI_MODELS.GPT_4O_MINI]: {
+    maxTokens: 128000,
+    costPer1kTokens: 0.00015,
+    description: 'Cost-effective model with excellent performance',
   },
 } as const;
 

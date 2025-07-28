@@ -4,6 +4,15 @@
   "framework": "nextjs",
   "installCommand": "npm install",
   "devCommand": "npm run dev",
+  "env": {
+    "AI_PROVIDER": "gemini",
+    "GEMINI_MODEL": "gemini-1.5-flash"
+  },
+  "build": {
+    "env": {
+      "AI_PROVIDER": "gemini"
+    }
+  },
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30

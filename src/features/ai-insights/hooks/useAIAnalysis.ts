@@ -3,13 +3,15 @@
  * React hook for managing AI analysis of journal entries
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { AIAnalysis } from '@/features/journal/types/journal.types';
+import { useJournalStore } from '@/shared/store/journalStore';
 
 // Hook state interface
 interface AIAnalysisState {
   isLoading: boolean;
   error: string | null;
+  errorType: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
   analysis: AIAnalysis | null;
 }
 
@@ -17,17 +19,36 @@ interface AIAnalysisState {
 interface UseAIAnalysisReturn extends AIAnalysisState {
   analyzeEntry: (
     content: string,
-    entryId: string
+    entryId: string,
+    type?: 'summary' | 'emotion' | 'full' | 'suggestions'
   ) => Promise<AIAnalysis | null>;
   clearError: () => void;
   clearAnalysis: () => void;
+  errorType: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
 }
 
 // API response interface
 interface AnalyzeResponse {
   success: boolean;
   analysis?: {
-    summary: string;
+    summary?: string;
+    sentiment?: 'positive' | 'negative' | 'neutral' | 'mixed';
+    emotions?: Array<{
+      name: string;
+      intensity: number;
+      emoji: string;
+      category: 'positive' | 'negative' | 'neutral';
+    }>;
+    suggestions?: Array<{
+      id: string;
+      category: 'wellness' | 'productivity' | 'reflection' | 'mindfulness' | 'social' | 'physical';
+      title: string;
+      description: string;
+      actionable: boolean;
+      priority: 'low' | 'medium' | 'high';
+      icon: string;
+    }>;
+    confidence?: number;
     generatedAt: string;
     model: string;
     tokenUsage?: {
@@ -44,19 +65,198 @@ interface AnalyzeResponse {
 /**
  * Hook for AI analysis of journal entries
  */
+/**
+ * Detect error type from error message or response
+ */
+function detectErrorType(error: any, response?: Response): AIAnalysisState['errorType'] {
+  // Check response status codes
+  if (response) {
+    switch (response.status) {
+      case 401:
+        return 'api_key';
+      case 429:
+        return 'rate_limit';
+      case 402:
+        return 'quota';
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return 'server_error';
+    }
+  }
+
+  // Check error message content
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+
+    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+      return 'network';
+    }
+
+    if (message.includes('api key') || message.includes('authentication') || message.includes('unauthorized')) {
+      return 'api_key';
+    }
+
+    if (message.includes('rate limit') || message.includes('too many requests')) {
+      return 'rate_limit';
+    }
+
+    if (message.includes('quota') || message.includes('billing') || message.includes('payment')) {
+      return 'quota';
+    }
+
+    if (message.includes('server') || message.includes('service') || message.includes('internal')) {
+      return 'server_error';
+    }
+  }
+
+  // Check for network errors
+  if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') {
+    return 'network';
+  }
+
+  return 'unknown';
+}
+
 export function useAIAnalysis(): UseAIAnalysisReturn {
   const [state, setState] = useState<AIAnalysisState>({
     isLoading: false,
     error: null,
+    errorType: null,
     analysis: null,
   });
 
   // Track the current request to prevent race conditions
   const currentRequestRef = useRef<AbortController | null>(null);
 
+  // Load cached analysis when current entry changes
+  useEffect(() => {
+    // Initial load of current entry's analysis
+    const loadCurrentAnalysis = () => {
+      const { currentEntry } = useJournalStore.getState();
+      console.log('Loading analysis for current entry:', {
+        entryId: currentEntry?.id,
+        hasAI: !!currentEntry?.aiAnalysis,
+        analysisType: currentEntry?.aiAnalysis?.type,
+      });
+
+      if (currentEntry?.aiAnalysis) {
+        setState(prev => ({
+          ...prev,
+          analysis: currentEntry.aiAnalysis || null,
+          error: null,
+          errorType: null,
+          isLoading: false,
+        }));
+      } else {
+        setState(prev => ({
+          ...prev,
+          analysis: null,
+          error: null,
+          errorType: null,
+          isLoading: false,
+        }));
+      }
+    };
+
+    // Load initial state
+    loadCurrentAnalysis();
+
+    // Subscribe to store changes
+    const unsubscribe = useJournalStore.subscribe((state) => {
+      const currentEntry = state.currentEntry;
+      console.log('Store changed, updating analysis:', {
+        entryId: currentEntry?.id,
+        hasAI: !!currentEntry?.aiAnalysis,
+      });
+
+      if (currentEntry?.aiAnalysis) {
+        setState(prev => ({
+          ...prev,
+          analysis: currentEntry.aiAnalysis || null,
+          error: null,
+          errorType: null,
+          isLoading: false,
+        }));
+      } else {
+        setState(prev => ({
+          ...prev,
+          analysis: null,
+          error: null,
+          errorType: null,
+          isLoading: false,
+        }));
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
   // Analyze journal entry
   const analyzeEntry = useCallback(
-    async (content: string, entryId: string): Promise<AIAnalysis | null> => {
+    async (
+      content: string,
+      entryId: string,
+      type: 'summary' | 'emotion' | 'full' | 'suggestions' = 'summary'
+    ): Promise<AIAnalysis | null> => {
+      console.log('🔍 analyzeEntry called:', {
+        entryId,
+        type,
+        contentLength: content.length,
+        contentPreview: content.substring(0, 50) + '...',
+      });
+
+      const { entries, updateEntry } = useJournalStore.getState();
+
+      // Check if we already have cached analysis for this entry
+      const existingEntry = entries.find(e => e.id === entryId);
+      if (existingEntry?.aiAnalysis) {
+        // Check if content has changed significantly since last analysis
+        const currentContent = content.trim().toLowerCase();
+        const originalContent = existingEntry.content.trim().toLowerCase();
+
+        // Calculate content similarity (simple approach)
+        const contentChanged = currentContent !== originalContent;
+        const contentLengthDiff = Math.abs(currentContent.length - originalContent.length);
+        const significantChange = contentChanged && (
+          contentLengthDiff > 50 || // More than 50 characters difference
+          contentLengthDiff / Math.max(originalContent.length, 1) > 0.2 // More than 20% change
+        );
+
+        console.log('Content change analysis:', {
+          contentChanged,
+          contentLengthDiff,
+          significantChange,
+          originalLength: originalContent.length,
+          currentLength: currentContent.length,
+        });
+
+        if (!significantChange) {
+          // Check if the cached analysis matches the requested type or is more comprehensive
+          const cachedType = existingEntry.aiAnalysis.type;
+          const isCompatible =
+            cachedType === type ||
+            cachedType === 'full' ||
+            (type === 'summary' && ['emotion', 'full'].includes(cachedType));
+
+          if (isCompatible) {
+            console.log('Using cached analysis - no significant content change');
+            // Use cached analysis
+            setState(prev => ({
+              ...prev,
+              isLoading: false,
+              error: null,
+              errorType: null,
+              analysis: existingEntry.aiAnalysis || null,
+            }));
+            return existingEntry.aiAnalysis || null;
+          }
+        } else {
+          console.log('Content changed significantly - will re-analyze');
+        }
+      }
+
       // Cancel any existing request
       if (currentRequestRef.current) {
         currentRequestRef.current.abort();
@@ -71,9 +271,12 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         ...prev,
         isLoading: true,
         error: null,
+        errorType: null,
       }));
 
       try {
+        console.log('🚀 Starting AI analysis request...');
+
         // Validate inputs
         if (!content || typeof content !== 'string') {
           throw new Error('Content is required and must be a string');
@@ -96,7 +299,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
           body: JSON.stringify({
             content: content.trim(),
             entryId,
-            type: 'summary',
+            type,
           }),
           signal: abortController.signal,
         });
@@ -110,9 +313,18 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         const data: AnalyzeResponse = await response.json();
 
         if (!response.ok) {
-          throw new Error(
-            data.error || `HTTP ${response.status}: Analysis failed`
-          );
+          const errorMessage = data.error || `HTTP ${response.status}: Analysis failed`;
+          const errorType = detectErrorType(new Error(errorMessage), response);
+
+          setState(prev => ({
+            ...prev,
+            isLoading: false,
+            error: errorMessage,
+            errorType,
+            analysis: null,
+          }));
+
+          return null;
         }
 
         if (!data.success || !data.analysis) {
@@ -121,21 +333,39 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
 
         // Convert API response to AIAnalysis
         const analysis: AIAnalysis = {
-          summary: data.analysis.summary,
+          summary: data.analysis.summary || '',
+          sentiment: data.analysis.sentiment,
+          emotions: data.analysis.emotions,
+          suggestions: data.analysis.suggestions,
+          confidence: data.analysis.confidence,
           generatedAt: new Date(data.analysis.generatedAt),
           model: data.analysis.model,
           tokenUsage: data.analysis.tokenUsage,
-          type: data.analysis.type as 'summary',
+          type: data.analysis.type as 'summary' | 'emotion' | 'full' | 'suggestions',
           version: data.analysis.version,
         };
 
-        // Update state with successful result
+        // Update state with successful result first
         setState(prev => ({
           ...prev,
           isLoading: false,
           error: null,
+          errorType: null,
           analysis,
         }));
+
+        // Save analysis result to journal entry (async, don't block UI)
+        try {
+          const { updateEntry } = useJournalStore.getState();
+          await updateEntry({
+            id: entryId,
+            aiAnalysis: analysis,
+          });
+          console.log('AI analysis saved to journal entry:', entryId);
+        } catch (saveError) {
+          console.warn('Failed to save AI analysis to journal entry:', saveError);
+          // Don't fail the analysis if saving fails
+        }
 
         return analysis;
       } catch (error) {
@@ -147,11 +377,13 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         // Handle other errors
         const errorMessage =
           error instanceof Error ? error.message : 'Unknown error occurred';
+        const errorType = detectErrorType(error);
 
         setState(prev => ({
           ...prev,
           isLoading: false,
           error: errorMessage,
+          errorType,
           analysis: null,
         }));
 
@@ -172,6 +404,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
     setState(prev => ({
       ...prev,
       error: null,
+      errorType: null,
     }));
   }, []);
 
@@ -186,6 +419,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
     setState({
       isLoading: false,
       error: null,
+      errorType: null,
       analysis: null,
     });
   }, []);
@@ -193,6 +427,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
   return {
     isLoading: state.isLoading,
     error: state.error,
+    errorType: state.errorType,
     analysis: state.analysis,
     analyzeEntry,
     clearError,

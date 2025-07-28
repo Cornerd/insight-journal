@@ -10,6 +10,7 @@ import {
   isContentSuitableForAnalysis,
 } from '../../ai-insights/hooks/useAIAnalysis';
 import { AIAnalysisCard } from '../../ai-insights/components/AIAnalysisCard';
+import { AIDebugPanel } from '../../ai-insights/components/AIDebugPanel';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -38,6 +39,7 @@ export function MarkdownEditor({
   const {
     isLoading: isAnalyzing,
     error: analysisError,
+    errorType: analysisErrorType,
     analysis,
     analyzeEntry,
     clearError: clearAnalysisError,
@@ -103,8 +105,10 @@ export function MarkdownEditor({
       // Trigger AI analysis if content is suitable
       if (isContentSuitableForAnalysis(content)) {
         try {
-          const aiAnalysis = await analyzeEntry(content, savedEntryId);
+          console.log('Triggering AI analysis for entry:', savedEntryId);
+          const aiAnalysis = await analyzeEntry(content, savedEntryId, 'full');
           if (aiAnalysis) {
+            console.log('AI analysis completed, updating entry');
             // Update entry with AI analysis
             await updateEntry({
               id: savedEntryId,
@@ -115,6 +119,8 @@ export function MarkdownEditor({
           console.warn('AI analysis failed:', analysisError);
           // Don't throw - save was successful, analysis is optional
         }
+      } else {
+        console.log('Content not suitable for AI analysis');
       }
     } catch (error) {
       console.error('Failed to save entry:', error);
@@ -307,20 +313,57 @@ export function MarkdownEditor({
       </div>
 
       {/* AI Analysis Display */}
-      {(analysis || isAnalyzing || analysisError) && (
-        <AIAnalysisCard
-          analysis={analysis}
-          isLoading={isAnalyzing}
-          error={analysisError}
-          onRetry={() => {
-            if (currentEntry) {
-              analyzeEntry(content, currentEntry.id);
-            }
-          }}
-          onClearError={clearAnalysisError}
-          className='mb-6'
-        />
+      {(() => {
+        const shouldShow = analysis || isAnalyzing || analysisError || currentEntry?.aiAnalysis;
+        console.log('MarkdownEditor AI Analysis Display:', {
+          shouldShow,
+          hasAnalysis: !!analysis,
+          isAnalyzing,
+          hasError: !!analysisError,
+          analysisType: analysis?.type,
+          currentEntryId: currentEntry?.id,
+          currentEntryHasAI: !!currentEntry?.aiAnalysis,
+          cachedAnalysisType: currentEntry?.aiAnalysis?.type,
+        });
+        return shouldShow;
+      })() && (
+        <div className="my-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              🤖 AI Analysis Results
+            </h3>
+            {currentEntry && !isAnalyzing && (
+              <button
+                onClick={() => {
+                  // Force re-analysis by clearing cache first
+                  clearAnalysis();
+                  analyzeEntry(content, currentEntry.id, 'full');
+                }}
+                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 cursor-pointer"
+                title="Re-analyze with current content"
+              >
+                🔄 Re-analyze
+              </button>
+            )}
+          </div>
+          <AIAnalysisCard
+            analysis={analysis || currentEntry?.aiAnalysis || null}
+            isLoading={isAnalyzing}
+            error={analysisError}
+            errorType={analysisErrorType}
+            onRetry={() => {
+              if (currentEntry) {
+                analyzeEntry(content, currentEntry.id, 'full');
+              }
+            }}
+            onClearError={clearAnalysisError}
+            className='mb-6'
+          />
+        </div>
       )}
+
+      {/* Debug Panel - Remove in production */}
+      {process.env.NODE_ENV === 'development' && <AIDebugPanel />}
 
       {/* Markdown Help */}
       <div className='bg-gray-50 dark:bg-gray-700 rounded-lg p-4'>

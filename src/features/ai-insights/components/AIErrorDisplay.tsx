@@ -18,6 +18,8 @@ interface AIErrorDisplayProps {
     | 'unknown';
   /** Retry function */
   onRetry?: () => void;
+  /** Clear error function */
+  onClearError?: () => void;
   /** Additional CSS classes */
   className?: string;
   /** Show detailed error information */
@@ -130,6 +132,7 @@ export function AIErrorDisplay({
   error,
   errorType = 'unknown',
   onRetry,
+  onClearError,
   className = '',
   showDetails = false,
 }: AIErrorDisplayProps) {
@@ -199,6 +202,21 @@ export function AIErrorDisplay({
                 <span className='mr-1'>⚙️</span>
                 Settings
               </a>
+            )}
+
+            {onClearError && (
+              <button
+                onClick={onClearError}
+                className={`
+                  inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
+                  transition-colors duration-200
+                  text-gray-600 bg-gray-100 hover:bg-gray-200
+                  border border-gray-300 cursor-pointer
+                `}
+              >
+                <span className='mr-1'>✕</span>
+                Dismiss
+              </button>
             )}
           </div>
 

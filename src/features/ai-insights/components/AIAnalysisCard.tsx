@@ -7,10 +7,7 @@ import React from 'react';
 import { AIAnalysis } from '@/features/journal/types/journal.types';
 import { EmotionTags } from './EmotionTags';
 import { SuggestionsList } from './SuggestionsList';
-import {
-  AIAnalysisLoading,
-  AIAnalysisSkeleton,
-} from '@/shared/components/feedback/LoadingSpinner';
+import { AIAnalysisLoading } from '@/shared/components/feedback/LoadingSpinner';
 import { AIErrorDisplay } from './AIErrorDisplay';
 
 interface AIAnalysisCardProps {
@@ -66,6 +63,7 @@ export function AIAnalysisCard({
         error={error}
         errorType={errorType || 'unknown'}
         onRetry={onRetry}
+        onClearError={onClearError}
         className={className}
       />
     );

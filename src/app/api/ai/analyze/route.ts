@@ -278,7 +278,7 @@ export async function POST(
     });
 
     // Parse response based on analysis type
-    const analysisData: any = {};
+    const analysisData: Record<string, unknown> = {};
 
     if (analysisType === 'summary') {
       analysisData.summary = result.content.trim();

@@ -10,7 +10,7 @@ import {
 } from '@/features/ai-insights/services/aiService';
 import { aiConfig } from '@/config/env';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get provider info
     const providerInfo = getAIProviderInfo();
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Temporarily override provider for testing
     const originalProvider = aiConfig.provider;
-    (aiConfig as any).provider = provider;
+    (aiConfig as typeof aiConfig & { provider: string }).provider = provider;
 
     try {
       const healthCheck = await checkAIServiceHealth();
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       });
     } finally {
       // Restore original provider
-      (aiConfig as any).provider = originalProvider;
+      (aiConfig as typeof aiConfig & { provider: string }).provider = originalProvider;
     }
   } catch (error) {
     console.error('AI Provider Test Error:', error);

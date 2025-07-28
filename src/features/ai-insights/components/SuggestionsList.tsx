@@ -27,7 +27,8 @@ function getCategoryStyle(category: Suggestion['category']) {
         bg: 'bg-green-50 dark:bg-green-900/20',
         text: 'text-green-700 dark:text-green-300',
         border: 'border-green-200 dark:border-green-700',
-        badge: 'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200',
+        badge:
+          'bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200',
       };
     case 'productivity':
       return {
@@ -41,14 +42,16 @@ function getCategoryStyle(category: Suggestion['category']) {
         bg: 'bg-purple-50 dark:bg-purple-900/20',
         text: 'text-purple-700 dark:text-purple-300',
         border: 'border-purple-200 dark:border-purple-700',
-        badge: 'bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200',
+        badge:
+          'bg-purple-100 dark:bg-purple-800 text-purple-800 dark:text-purple-200',
       };
     case 'mindfulness':
       return {
         bg: 'bg-indigo-50 dark:bg-indigo-900/20',
         text: 'text-indigo-700 dark:text-indigo-300',
         border: 'border-indigo-200 dark:border-indigo-700',
-        badge: 'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200',
+        badge:
+          'bg-indigo-100 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200',
       };
     case 'social':
       return {
@@ -62,7 +65,8 @@ function getCategoryStyle(category: Suggestion['category']) {
         bg: 'bg-orange-50 dark:bg-orange-900/20',
         text: 'text-orange-700 dark:text-orange-300',
         border: 'border-orange-200 dark:border-orange-700',
-        badge: 'bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
+        badge:
+          'bg-orange-100 dark:bg-orange-800 text-orange-800 dark:text-orange-200',
       };
   }
 }
@@ -105,14 +109,17 @@ export function SuggestionsList({
 
   // Group suggestions by category if showing categories
   const groupedSuggestions = showCategories
-    ? suggestions.reduce((groups, suggestion) => {
-        const category = suggestion.category;
-        if (!groups[category]) {
-          groups[category] = [];
-        }
-        groups[category].push(suggestion);
-        return groups;
-      }, {} as Record<string, Suggestion[]>)
+    ? suggestions.reduce(
+        (groups, suggestion) => {
+          const category = suggestion.category;
+          if (!groups[category]) {
+            groups[category] = [];
+          }
+          groups[category].push(suggestion);
+          return groups;
+        },
+        {} as Record<string, Suggestion[]>
+      )
     : { all: suggestions };
 
   // Sort suggestions by priority within each group
@@ -126,19 +133,20 @@ export function SuggestionsList({
   if (compact) {
     return (
       <div className={`space-y-2 ${className}`}>
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className='flex items-center space-x-2 mb-2'>
+          <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
             Suggestions:
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            ({suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''})
+          <span className='text-xs text-gray-500 dark:text-gray-400'>
+            ({suggestions.length} suggestion
+            {suggestions.length !== 1 ? 's' : ''})
           </span>
         </div>
-        
-        <div className="grid gap-2">
-          {suggestions.slice(0, 3).map((suggestion) => {
+
+        <div className='grid gap-2'>
+          {suggestions.slice(0, 3).map(suggestion => {
             const categoryStyle = getCategoryStyle(suggestion.category);
-            
+
             return (
               <div
                 key={suggestion.id}
@@ -147,13 +155,17 @@ export function SuggestionsList({
                   ${categoryStyle.bg} ${categoryStyle.border}
                 `}
               >
-                <div className="flex items-start space-x-2">
-                  <span className="text-lg flex-shrink-0">{suggestion.icon}</span>
-                  <div className="flex-1 min-w-0">
+                <div className='flex items-start space-x-2'>
+                  <span className='text-lg flex-shrink-0'>
+                    {suggestion.icon}
+                  </span>
+                  <div className='flex-1 min-w-0'>
                     <h4 className={`text-sm font-medium ${categoryStyle.text}`}>
                       {suggestion.title}
                     </h4>
-                    <p className={`text-xs ${categoryStyle.text} opacity-80 mt-1`}>
+                    <p
+                      className={`text-xs ${categoryStyle.text} opacity-80 mt-1`}
+                    >
                       {suggestion.description.length > 80
                         ? `${suggestion.description.substring(0, 80)}...`
                         : suggestion.description}
@@ -163,10 +175,11 @@ export function SuggestionsList({
               </div>
             );
           })}
-          
+
           {suggestions.length > 3 && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 text-center py-1">
-              +{suggestions.length - 3} more suggestion{suggestions.length - 3 !== 1 ? 's' : ''}
+            <div className='text-xs text-gray-500 dark:text-gray-400 text-center py-1'>
+              +{suggestions.length - 3} more suggestion
+              {suggestions.length - 3 !== 1 ? 's' : ''}
             </div>
           )}
         </div>
@@ -176,89 +189,99 @@ export function SuggestionsList({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+      <div className='flex items-center justify-between'>
+        <h3 className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
           Personalized Suggestions
         </h3>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className='text-xs text-gray-500 dark:text-gray-400'>
           {suggestions.length} suggestion{suggestions.length !== 1 ? 's' : ''}
         </span>
       </div>
 
-      {Object.entries(groupedSuggestions).map(([categoryKey, categorySuggestions]) => (
-        <div key={categoryKey}>
-          {showCategories && categoryKey !== 'all' && (
-            <div className="mb-3">
-              <span className={`
+      {Object.entries(groupedSuggestions).map(
+        ([categoryKey, categorySuggestions]) => (
+          <div key={categoryKey}>
+            {showCategories && categoryKey !== 'all' && (
+              <div className='mb-3'>
+                <span
+                  className={`
                 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                 ${getCategoryStyle(categoryKey as Suggestion['category']).badge}
-              `}>
-                {categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1)}
-              </span>
-            </div>
-          )}
-          
-          <div className="space-y-3">
-            {categorySuggestions.map((suggestion) => {
-              const categoryStyle = getCategoryStyle(suggestion.category);
-              const priorityStyle = getPriorityStyle(suggestion.priority);
-              
-              return (
-                <div
-                  key={suggestion.id}
-                  className={`
+              `}
+                >
+                  {categoryKey.charAt(0).toUpperCase() + categoryKey.slice(1)}
+                </span>
+              </div>
+            )}
+
+            <div className='space-y-3'>
+              {categorySuggestions.map(suggestion => {
+                const categoryStyle = getCategoryStyle(suggestion.category);
+                const priorityStyle = getPriorityStyle(suggestion.priority);
+
+                return (
+                  <div
+                    key={suggestion.id}
+                    className={`
                     p-4 rounded-lg border transition-all duration-200 hover:shadow-md
                     ${categoryStyle.bg} ${categoryStyle.border}
                   `}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="flex-shrink-0">
-                      <span className="text-xl">{suggestion.icon}</span>
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className={`text-sm font-semibold ${categoryStyle.text}`}>
-                          {suggestion.title}
-                        </h4>
-                        
-                        {suggestion.priority !== 'low' && (
-                          <span
-                            className={`
+                  >
+                    <div className='flex items-start space-x-3'>
+                      <div className='flex-shrink-0'>
+                        <span className='text-xl'>{suggestion.icon}</span>
+                      </div>
+
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-start justify-between mb-2'>
+                          <h4
+                            className={`text-sm font-semibold ${categoryStyle.text}`}
+                          >
+                            {suggestion.title}
+                          </h4>
+
+                          {suggestion.priority !== 'low' && (
+                            <span
+                              className={`
                               inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
                               ${priorityStyle.bg} ${priorityStyle.color}
                             `}
-                            title={priorityStyle.label}
-                          >
-                            {suggestion.priority}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className={`text-sm ${categoryStyle.text} opacity-90 leading-relaxed`}>
-                        {suggestion.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center space-x-2 text-xs">
-                          {suggestion.actionable && (
-                            <span className={`
-                              inline-flex items-center px-2 py-1 rounded-full
-                              bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200
-                            `}>
-                              ✓ Actionable
+                              title={priorityStyle.label}
+                            >
+                              {suggestion.priority}
                             </span>
                           )}
+                        </div>
+
+                        <p
+                          className={`text-sm ${categoryStyle.text} opacity-90 leading-relaxed`}
+                        >
+                          {suggestion.description}
+                        </p>
+
+                        <div className='flex items-center justify-between mt-3'>
+                          <div className='flex items-center space-x-2 text-xs'>
+                            {suggestion.actionable && (
+                              <span
+                                className={`
+                              inline-flex items-center px-2 py-1 rounded-full
+                              bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200
+                            `}
+                              >
+                                ✓ Actionable
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      )}
     </div>
   );
 }

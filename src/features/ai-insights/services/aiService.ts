@@ -37,7 +37,7 @@ async function callOpenAI(
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${aiConfig.openai.apiKey}`,
+      Authorization: `Bearer ${aiConfig.openai.apiKey}`,
     },
     body: JSON.stringify({
       model: aiConfig.openai.model,
@@ -49,11 +49,13 @@ async function callOpenAI(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || `OpenAI API error: ${response.status}`);
+    throw new Error(
+      error.error?.message || `OpenAI API error: ${response.status}`
+    );
   }
 
   const data = await response.json();
-  
+
   return {
     content: data.choices[0].message.content,
     model: data.model,
@@ -71,8 +73,8 @@ async function callGemini(
   // Convert messages to Gemini format
   const systemMessage = messages.find(m => m.role === 'system');
   const userMessages = messages.filter(m => m.role === 'user');
-  
-  const prompt = systemMessage 
+
+  const prompt = systemMessage
     ? `${systemMessage.content}\n\nUser: ${userMessages.map(m => m.content).join('\n')}`
     : userMessages.map(m => m.content).join('\n');
 
@@ -83,13 +85,15 @@ async function callGemini(
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'InsightJournal/1.0',
-        'Referer': 'http://localhost:3001',
-        'Origin': 'http://localhost:3001',
+        Referer: 'http://localhost:3001',
+        Origin: 'http://localhost:3001',
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
         generationConfig: {
           temperature: config.temperature || 0.3,
           maxOutputTokens: config.maxTokens || 500,
@@ -100,11 +104,13 @@ async function callGemini(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
+    throw new Error(
+      error.error?.message || `Gemini API error: ${response.status}`
+    );
   }
 
   const data = await response.json();
-  
+
   if (!data.candidates || !data.candidates[0]) {
     throw new Error('No response from Gemini API');
   }
@@ -112,11 +118,13 @@ async function callGemini(
   return {
     content: data.candidates[0].content.parts[0].text,
     model: config.model || aiConfig.gemini.model,
-    usage: data.usageMetadata ? {
-      prompt_tokens: data.usageMetadata.promptTokenCount || 0,
-      completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
-      total_tokens: data.usageMetadata.totalTokenCount || 0,
-    } : undefined,
+    usage: data.usageMetadata
+      ? {
+          prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+          completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
+          total_tokens: data.usageMetadata.totalTokenCount || 0,
+        }
+      : undefined,
   };
 }
 
@@ -130,8 +138,8 @@ async function callOllama(
   // Convert messages to Ollama format
   const systemMessage = messages.find(m => m.role === 'system');
   const userMessages = messages.filter(m => m.role === 'user');
-  
-  const prompt = systemMessage 
+
+  const prompt = systemMessage
     ? `${systemMessage.content}\n\nUser: ${userMessages.map(m => m.content).join('\n')}`
     : userMessages.map(m => m.content).join('\n');
 
@@ -157,7 +165,7 @@ async function callOllama(
   }
 
   const data = await response.json();
-  
+
   return {
     content: data.response,
     model: data.model,
@@ -178,18 +186,18 @@ export async function createChatCompletion(
   config: AIServiceConfig = {}
 ): Promise<AIResponse> {
   const provider = aiConfig.provider;
-  
+
   try {
     switch (provider) {
       case 'openai':
         return await callOpenAI(messages, config);
-      
+
       case 'gemini':
         return await callGemini(messages, config);
-      
+
       case 'ollama':
         return await callOllama(messages, config);
-      
+
       default:
         throw new Error(`Unsupported AI provider: ${provider}`);
     }
@@ -208,19 +216,19 @@ export async function checkAIServiceHealth(): Promise<{
   error?: string;
 }> {
   const provider = aiConfig.provider;
-  
+
   try {
     // Simple health check with minimal request
-    await createChatCompletion([
-      { role: 'user', content: 'Hello' }
-    ], { maxTokens: 5 });
-    
+    await createChatCompletion([{ role: 'user', content: 'Hello' }], {
+      maxTokens: 5,
+    });
+
     return { provider, available: true };
   } catch (error) {
-    return { 
-      provider, 
-      available: false, 
-      error: error instanceof Error ? error.message : 'Unknown error'
+    return {
+      provider,
+      available: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -230,7 +238,7 @@ export async function checkAIServiceHealth(): Promise<{
  */
 export function getAIProviderInfo() {
   const provider = aiConfig.provider;
-  
+
   const providerInfo = {
     openai: {
       name: 'OpenAI',
@@ -242,7 +250,7 @@ export function getAIProviderInfo() {
       name: 'Google Gemini',
       model: aiConfig.gemini.model,
       cost: 'Free tier available',
-      description: 'Google\'s AI with generous free quota',
+      description: "Google's AI with generous free quota",
     },
     ollama: {
       name: 'Ollama (Local)',
@@ -251,7 +259,7 @@ export function getAIProviderInfo() {
       description: 'Local AI model, completely free and private',
     },
   };
-  
+
   return {
     current: provider,
     info: providerInfo[provider as keyof typeof providerInfo],

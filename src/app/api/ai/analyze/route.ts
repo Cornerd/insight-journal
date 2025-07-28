@@ -21,21 +21,63 @@ import { processOpenAIError } from '@/shared/lib/api/errors';
 // Helper functions for data normalization
 function getEmotionEmoji(emotion: string): string {
   const emojiMap: Record<string, string> = {
-    'happy': '😊', 'joy': '😄', 'excited': '🤩', 'content': '😌',
-    'sad': '😢', 'disappointed': '😞', 'melancholy': '😔',
-    'angry': '😠', 'frustrated': '😤', 'annoyed': '😒',
-    'anxious': '😰', 'worried': '😟', 'nervous': '😬',
-    'calm': '😌', 'peaceful': '☮️', 'relaxed': '😎',
-    'grateful': '🙏', 'thankful': '🙏', 'appreciative': '🙏',
-    'confident': '💪', 'proud': '🏆', 'accomplished': '✨',
-    'curious': '🤔', 'interested': '👀', 'engaged': '🎯'
+    happy: '😊',
+    joy: '😄',
+    excited: '🤩',
+    content: '😌',
+    sad: '😢',
+    disappointed: '😞',
+    melancholy: '😔',
+    angry: '😠',
+    frustrated: '😤',
+    annoyed: '😒',
+    anxious: '😰',
+    worried: '😟',
+    nervous: '😬',
+    calm: '😌',
+    peaceful: '☮️',
+    relaxed: '😎',
+    grateful: '🙏',
+    thankful: '🙏',
+    appreciative: '🙏',
+    confident: '💪',
+    proud: '🏆',
+    accomplished: '✨',
+    curious: '🤔',
+    interested: '👀',
+    engaged: '🎯',
   };
   return emojiMap[emotion.toLowerCase()] || '😐';
 }
 
-function getEmotionCategory(emotion: string): 'positive' | 'negative' | 'neutral' {
-  const positiveEmotions = ['happy', 'joy', 'excited', 'content', 'grateful', 'thankful', 'confident', 'proud', 'accomplished', 'calm', 'peaceful', 'relaxed'];
-  const negativeEmotions = ['sad', 'disappointed', 'melancholy', 'angry', 'frustrated', 'annoyed', 'anxious', 'worried', 'nervous'];
+function getEmotionCategory(
+  emotion: string
+): 'positive' | 'negative' | 'neutral' {
+  const positiveEmotions = [
+    'happy',
+    'joy',
+    'excited',
+    'content',
+    'grateful',
+    'thankful',
+    'confident',
+    'proud',
+    'accomplished',
+    'calm',
+    'peaceful',
+    'relaxed',
+  ];
+  const negativeEmotions = [
+    'sad',
+    'disappointed',
+    'melancholy',
+    'angry',
+    'frustrated',
+    'annoyed',
+    'anxious',
+    'worried',
+    'nervous',
+  ];
 
   const emotionLower = emotion.toLowerCase();
   if (positiveEmotions.includes(emotionLower)) return 'positive';
@@ -59,7 +101,13 @@ interface EmotionData {
 
 interface SuggestionData {
   id: string;
-  category: 'wellness' | 'productivity' | 'reflection' | 'mindfulness' | 'social' | 'physical';
+  category:
+    | 'wellness'
+    | 'productivity'
+    | 'reflection'
+    | 'mindfulness'
+    | 'social'
+    | 'physical';
   title: string;
   description: string;
   actionable: boolean;
@@ -99,7 +147,10 @@ export async function POST(
         case 'openai':
           return !!aiConfig.openai.apiKey && aiConfig.openai.apiKey !== '';
         case 'gemini':
-          return !!aiConfig.gemini.apiKey && aiConfig.gemini.apiKey !== 'your-gemini-api-key-here';
+          return (
+            !!aiConfig.gemini.apiKey &&
+            aiConfig.gemini.apiKey !== 'your-gemini-api-key-here'
+          );
         case 'ollama':
           return true; // Ollama doesn't need API keys
         default:
@@ -158,7 +209,8 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: 'Analysis type must be one of: summary, emotion, full, suggestions.',
+          error:
+            'Analysis type must be one of: summary, emotion, full, suggestions.',
         },
         { status: 400 }
       );
@@ -226,20 +278,28 @@ export async function POST(
     });
 
     // Parse response based on analysis type
-    let analysisData: any = {};
+    const analysisData: any = {};
 
     if (analysisType === 'summary') {
       analysisData.summary = result.content.trim();
-    } else if (analysisType === 'emotion' || analysisType === 'full' || analysisType === 'suggestions') {
+    } else if (
+      analysisType === 'emotion' ||
+      analysisType === 'full' ||
+      analysisType === 'suggestions'
+    ) {
       try {
         // Clean up the response - remove markdown code blocks if present
         let cleanContent = result.content.trim();
 
         // Remove ```json and ``` markers
         if (cleanContent.startsWith('```json')) {
-          cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+          cleanContent = cleanContent
+            .replace(/^```json\s*/, '')
+            .replace(/\s*```$/, '');
         } else if (cleanContent.startsWith('```')) {
-          cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+          cleanContent = cleanContent
+            .replace(/^```\s*/, '')
+            .replace(/\s*```$/, '');
         }
 
         const parsedResult = JSON.parse(cleanContent.trim());
@@ -248,7 +308,7 @@ export async function POST(
         const normalizeEmotions = (emotions: unknown) => {
           if (!emotions) return undefined;
           if (Array.isArray(emotions)) {
-            return emotions.map((emotion) => {
+            return emotions.map(emotion => {
               if (typeof emotion === 'string') {
                 // Convert string to expected object format
                 return {
@@ -262,8 +322,11 @@ export async function POST(
               return {
                 name: emotion.name || emotion,
                 intensity: emotion.intensity || 0.7,
-                emoji: emotion.emoji || getEmotionEmoji(emotion.name || emotion),
-                category: emotion.category || getEmotionCategory(emotion.name || emotion),
+                emoji:
+                  emotion.emoji || getEmotionEmoji(emotion.name || emotion),
+                category:
+                  emotion.category ||
+                  getEmotionCategory(emotion.name || emotion),
               };
             });
           }
@@ -280,7 +343,10 @@ export async function POST(
                 return {
                   id: `suggestion-${index}`,
                   category: 'reflection' as const,
-                  title: suggestion.length > 50 ? suggestion.substring(0, 50) + '...' : suggestion,
+                  title:
+                    suggestion.length > 50
+                      ? suggestion.substring(0, 50) + '...'
+                      : suggestion,
                   description: suggestion,
                   actionable: true,
                   priority: 'medium' as const,
@@ -291,9 +357,16 @@ export async function POST(
               return {
                 id: suggestion.id || `suggestion-${index}`,
                 category: suggestion.category || 'reflection',
-                title: suggestion.title || suggestion.description?.substring(0, 50) || 'Suggestion',
-                description: suggestion.description || suggestion.title || suggestion,
-                actionable: suggestion.actionable !== undefined ? suggestion.actionable : true,
+                title:
+                  suggestion.title ||
+                  suggestion.description?.substring(0, 50) ||
+                  'Suggestion',
+                description:
+                  suggestion.description || suggestion.title || suggestion,
+                actionable:
+                  suggestion.actionable !== undefined
+                    ? suggestion.actionable
+                    : true,
                 priority: suggestion.priority || 'medium',
                 icon: suggestion.icon || '💡',
               };
@@ -310,10 +383,14 @@ export async function POST(
           analysisData.summary = parsedResult.summary;
           analysisData.sentiment = parsedResult.sentiment;
           analysisData.emotions = normalizeEmotions(parsedResult.emotions);
-          analysisData.suggestions = normalizeSuggestions(parsedResult.suggestions);
+          analysisData.suggestions = normalizeSuggestions(
+            parsedResult.suggestions
+          );
           analysisData.confidence = parsedResult.confidence;
         } else if (analysisType === 'suggestions') {
-          analysisData.suggestions = normalizeSuggestions(parsedResult.suggestions);
+          analysisData.suggestions = normalizeSuggestions(
+            parsedResult.suggestions
+          );
         }
       } catch (parseError) {
         console.error('Failed to parse AI response:', parseError);
@@ -322,10 +399,16 @@ export async function POST(
           {
             success: false,
             error: 'Failed to parse AI analysis response.',
-            debug: process.env.NODE_ENV === 'development' ? {
-              parseError: parseError instanceof Error ? parseError.message : String(parseError),
-              rawResponse: result.content.substring(0, 500) + '...'
-            } : undefined
+            debug:
+              process.env.NODE_ENV === 'development'
+                ? {
+                    parseError:
+                      parseError instanceof Error
+                        ? parseError.message
+                        : String(parseError),
+                    rawResponse: result.content.substring(0, 500) + '...',
+                  }
+                : undefined,
           },
           { status: 500 }
         );

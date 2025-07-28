@@ -7,7 +7,10 @@ import React from 'react';
 import { AIAnalysis } from '@/features/journal/types/journal.types';
 import { EmotionTags } from './EmotionTags';
 import { SuggestionsList } from './SuggestionsList';
-import { AIAnalysisLoading, AIAnalysisSkeleton } from '@/shared/components/feedback/LoadingSpinner';
+import {
+  AIAnalysisLoading,
+  AIAnalysisSkeleton,
+} from '@/shared/components/feedback/LoadingSpinner';
 import { AIErrorDisplay } from './AIErrorDisplay';
 
 interface AIAnalysisCardProps {
@@ -18,7 +21,14 @@ interface AIAnalysisCardProps {
   /** Error message */
   error?: string | null;
   /** Error type for specific handling */
-  errorType?: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
+  errorType?:
+    | 'network'
+    | 'api_key'
+    | 'rate_limit'
+    | 'quota'
+    | 'server_error'
+    | 'unknown'
+    | null;
   /** Callback to retry analysis */
   onRetry?: () => void;
   /** Callback to clear error */
@@ -46,12 +56,7 @@ export function AIAnalysisCard({
   });
   // Loading state
   if (isLoading) {
-    return (
-      <AIAnalysisLoading
-        stage="summary"
-        className={className}
-      />
-    );
+    return <AIAnalysisLoading stage='summary' className={className} />;
   }
 
   // Error state
@@ -105,8 +110,8 @@ export function AIAnalysisCard({
 
           {/* Summary Section */}
           {analysis.summary && (
-            <div className="mb-4">
-              <h4 className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-1">
+            <div className='mb-4'>
+              <h4 className='text-xs font-medium text-blue-800 dark:text-blue-300 mb-1'>
                 Summary
               </h4>
               <p className='text-sm text-blue-800 dark:text-blue-200 leading-relaxed'>
@@ -117,7 +122,7 @@ export function AIAnalysisCard({
 
           {/* Emotion Analysis Section */}
           {analysis.emotions && analysis.emotions.length > 0 && (
-            <div className="mb-4">
+            <div className='mb-4'>
               <EmotionTags
                 emotions={analysis.emotions}
                 sentiment={analysis.sentiment}
@@ -129,7 +134,7 @@ export function AIAnalysisCard({
 
           {/* Suggestions Section */}
           {analysis.suggestions && analysis.suggestions.length > 0 && (
-            <div className="mb-4">
+            <div className='mb-4'>
               <SuggestionsList
                 suggestions={analysis.suggestions}
                 showCategories={true}
@@ -149,8 +154,18 @@ export function AIAnalysisCard({
                 <span>{Math.round(analysis.confidence * 100)}% confidence</span>
               )}
             </div>
-            <time dateTime={typeof analysis.generatedAt === 'string' ? analysis.generatedAt : analysis.generatedAt.toISOString()}>
-              {formatAnalysisDate(typeof analysis.generatedAt === 'string' ? new Date(analysis.generatedAt) : analysis.generatedAt)}
+            <time
+              dateTime={
+                typeof analysis.generatedAt === 'string'
+                  ? analysis.generatedAt
+                  : analysis.generatedAt.toISOString()
+              }
+            >
+              {formatAnalysisDate(
+                typeof analysis.generatedAt === 'string'
+                  ? new Date(analysis.generatedAt)
+                  : analysis.generatedAt
+              )}
             </time>
           </div>
         </div>

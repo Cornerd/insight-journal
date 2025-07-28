@@ -234,7 +234,9 @@ export function createSuggestionsPrompt(
     contextInfo.push(`Summary: ${summary}`);
   }
   if (emotions && emotions.length > 0) {
-    const emotionList = emotions.map(e => `${e.name} (${e.category}, intensity: ${e.intensity})`).join(', ');
+    const emotionList = emotions
+      .map(e => `${e.name} (${e.category}, intensity: ${e.intensity})`)
+      .join(', ');
     contextInfo.push(`Emotions: ${emotionList}`);
   }
 
@@ -353,7 +355,9 @@ export function validatePromptInput(content: string): {
 /**
  * Get prompt configuration for analysis type
  */
-export function getPromptConfig(type: 'summarization' | 'emotion' | 'full' | 'suggestions') {
+export function getPromptConfig(
+  type: 'summarization' | 'emotion' | 'full' | 'suggestions'
+) {
   switch (type) {
     case 'summarization':
       return PROMPT_CONFIG.summarization;
@@ -371,7 +375,9 @@ export function getPromptConfig(type: 'summarization' | 'emotion' | 'full' | 'su
 /**
  * Get prompt version for analysis type
  */
-export function getPromptVersion(type: 'summarization' | 'emotion' | 'full' | 'suggestions'): string {
+export function getPromptVersion(
+  type: 'summarization' | 'emotion' | 'full' | 'suggestions'
+): string {
   switch (type) {
     case 'summarization':
       return PROMPT_VERSIONS.summarization;

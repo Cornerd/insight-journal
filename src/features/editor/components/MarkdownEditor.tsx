@@ -314,7 +314,8 @@ export function MarkdownEditor({
 
       {/* AI Analysis Display */}
       {(() => {
-        const shouldShow = analysis || isAnalyzing || analysisError || currentEntry?.aiAnalysis;
+        const shouldShow =
+          analysis || isAnalyzing || analysisError || currentEntry?.aiAnalysis;
         console.log('MarkdownEditor AI Analysis Display:', {
           shouldShow,
           hasAnalysis: !!analysis,
@@ -327,9 +328,9 @@ export function MarkdownEditor({
         });
         return shouldShow;
       })() && (
-        <div className="my-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className='my-6'>
+          <div className='flex items-center justify-between mb-4'>
+            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
               🤖 AI Analysis Results
             </h3>
             {currentEntry && !isAnalyzing && (
@@ -339,8 +340,8 @@ export function MarkdownEditor({
                   clearAnalysis();
                   analyzeEntry(content, currentEntry.id, 'full');
                 }}
-                className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 cursor-pointer"
-                title="Re-analyze with current content"
+                className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 cursor-pointer'
+                title='Re-analyze with current content'
               >
                 🔄 Re-analyze
               </button>

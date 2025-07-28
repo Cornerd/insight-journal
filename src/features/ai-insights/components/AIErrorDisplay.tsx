@@ -9,7 +9,13 @@ interface AIErrorDisplayProps {
   /** Error message */
   error: string;
   /** Error type for specific handling */
-  errorType?: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown';
+  errorType?:
+    | 'network'
+    | 'api_key'
+    | 'rate_limit'
+    | 'quota'
+    | 'server_error'
+    | 'unknown';
   /** Retry function */
   onRetry?: () => void;
   /** Additional CSS classes */
@@ -77,7 +83,9 @@ function getErrorStyle(errorType: AIErrorDisplayProps['errorType']) {
 /**
  * Get helpful guidance based on error type
  */
-function getErrorGuidance(errorType: AIErrorDisplayProps['errorType']): string[] {
+function getErrorGuidance(
+  errorType: AIErrorDisplayProps['errorType']
+): string[] {
   switch (errorType) {
     case 'network':
       return [
@@ -129,32 +137,32 @@ export function AIErrorDisplay({
   const guidance = getErrorGuidance(errorType);
 
   return (
-    <div className={`p-4 rounded-lg border ${style.bg} ${style.border} ${className}`}>
-      <div className="flex items-start space-x-3">
+    <div
+      className={`p-4 rounded-lg border ${style.bg} ${style.border} ${className}`}
+    >
+      <div className='flex items-start space-x-3'>
         {/* Error Icon */}
-        <div className="flex-shrink-0">
-          <span className="text-2xl">{style.icon}</span>
+        <div className='flex-shrink-0'>
+          <span className='text-2xl'>{style.icon}</span>
         </div>
 
         {/* Error Content */}
-        <div className="flex-1 min-w-0">
+        <div className='flex-1 min-w-0'>
           <h3 className={`text-sm font-semibold ${style.color} mb-1`}>
             {style.title}
           </h3>
-          
-          <p className={`text-sm ${style.color} opacity-90 mb-3`}>
-            {error}
-          </p>
+
+          <p className={`text-sm ${style.color} opacity-90 mb-3`}>{error}</p>
 
           {/* Guidance */}
-          <div className="mb-4">
+          <div className='mb-4'>
             <h4 className={`text-xs font-medium ${style.color} mb-2`}>
               What you can do:
             </h4>
             <ul className={`text-xs ${style.color} opacity-80 space-y-1`}>
               {guidance.map((tip, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <span className="text-xs mt-0.5">•</span>
+                <li key={index} className='flex items-start space-x-2'>
+                  <span className='text-xs mt-0.5'>•</span>
                   <span>{tip}</span>
                 </li>
               ))}
@@ -162,7 +170,7 @@ export function AIErrorDisplay({
           </div>
 
           {/* Actions */}
-          <div className="flex items-center space-x-3">
+          <div className='flex items-center space-x-3'>
             {onRetry && (
               <button
                 onClick={onRetry}
@@ -173,14 +181,14 @@ export function AIErrorDisplay({
                   border ${style.border}
                 `}
               >
-                <span className="mr-1">🔄</span>
+                <span className='mr-1'>🔄</span>
                 Try Again
               </button>
             )}
-            
+
             {errorType === 'api_key' && (
               <a
-                href="/settings"
+                href='/settings'
                 className={`
                   inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md
                   transition-colors duration-200
@@ -188,7 +196,7 @@ export function AIErrorDisplay({
                   border ${style.border}
                 `}
               >
-                <span className="mr-1">⚙️</span>
+                <span className='mr-1'>⚙️</span>
                 Settings
               </a>
             )}
@@ -196,11 +204,15 @@ export function AIErrorDisplay({
 
           {/* Detailed Error (for debugging) */}
           {showDetails && (
-            <details className="mt-3">
-              <summary className={`text-xs ${style.color} opacity-60 cursor-pointer hover:opacity-80`}>
+            <details className='mt-3'>
+              <summary
+                className={`text-xs ${style.color} opacity-60 cursor-pointer hover:opacity-80`}
+              >
                 Technical Details
               </summary>
-              <pre className={`text-xs ${style.color} opacity-60 mt-2 p-2 bg-black/5 dark:bg-white/5 rounded overflow-x-auto`}>
+              <pre
+                className={`text-xs ${style.color} opacity-60 mt-2 p-2 bg-black/5 dark:bg-white/5 rounded overflow-x-auto`}
+              >
                 {JSON.stringify({ error, errorType }, null, 2)}
               </pre>
             </details>
@@ -223,11 +235,11 @@ export function AIErrorCompact({
   const style = getErrorStyle(errorType);
 
   return (
-    <div className={`flex items-center space-x-2 p-2 rounded ${style.bg} ${style.border} border ${className}`}>
-      <span className="text-sm">{style.icon}</span>
-      <span className={`text-xs ${style.color} flex-1`}>
-        {error}
-      </span>
+    <div
+      className={`flex items-center space-x-2 p-2 rounded ${style.bg} ${style.border} border ${className}`}
+    >
+      <span className='text-sm'>{style.icon}</span>
+      <span className={`text-xs ${style.color} flex-1`}>{error}</span>
       {onRetry && (
         <button
           onClick={onRetry}
@@ -252,10 +264,16 @@ interface AIErrorBoundaryState {
 }
 
 export class AIErrorBoundary extends React.Component<
-  React.PropsWithChildren<{ fallback?: React.ComponentType<{ error: Error; retry: () => void }> }>,
+  React.PropsWithChildren<{
+    fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+  }>,
   AIErrorBoundaryState
 > {
-  constructor(props: React.PropsWithChildren<{ fallback?: React.ComponentType<{ error: Error; retry: () => void }> }>) {
+  constructor(
+    props: React.PropsWithChildren<{
+      fallback?: React.ComponentType<{ error: Error; retry: () => void }>;
+    }>
+  ) {
     super(props);
     this.state = { hasError: false };
   }
@@ -276,13 +294,15 @@ export class AIErrorBoundary extends React.Component<
     if (this.state.hasError && this.state.error) {
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback;
-        return <FallbackComponent error={this.state.error} retry={this.retry} />;
+        return (
+          <FallbackComponent error={this.state.error} retry={this.retry} />
+        );
       }
 
       return (
         <AIErrorDisplay
           error={this.state.error.message}
-          errorType="unknown"
+          errorType='unknown'
           onRetry={this.retry}
           showDetails={process.env.NODE_ENV === 'development'}
         />

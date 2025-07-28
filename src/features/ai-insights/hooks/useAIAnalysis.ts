@@ -11,7 +11,14 @@ import { useJournalStore } from '@/shared/store/journalStore';
 interface AIAnalysisState {
   isLoading: boolean;
   error: string | null;
-  errorType: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
+  errorType:
+    | 'network'
+    | 'api_key'
+    | 'rate_limit'
+    | 'quota'
+    | 'server_error'
+    | 'unknown'
+    | null;
   analysis: AIAnalysis | null;
 }
 
@@ -24,7 +31,14 @@ interface UseAIAnalysisReturn extends AIAnalysisState {
   ) => Promise<AIAnalysis | null>;
   clearError: () => void;
   clearAnalysis: () => void;
-  errorType: 'network' | 'api_key' | 'rate_limit' | 'quota' | 'server_error' | 'unknown' | null;
+  errorType:
+    | 'network'
+    | 'api_key'
+    | 'rate_limit'
+    | 'quota'
+    | 'server_error'
+    | 'unknown'
+    | null;
 }
 
 // API response interface
@@ -41,7 +55,13 @@ interface AnalyzeResponse {
     }>;
     suggestions?: Array<{
       id: string;
-      category: 'wellness' | 'productivity' | 'reflection' | 'mindfulness' | 'social' | 'physical';
+      category:
+        | 'wellness'
+        | 'productivity'
+        | 'reflection'
+        | 'mindfulness'
+        | 'social'
+        | 'physical';
       title: string;
       description: string;
       actionable: boolean;
@@ -68,7 +88,10 @@ interface AnalyzeResponse {
 /**
  * Detect error type from error message or response
  */
-function detectErrorType(error: any, response?: Response): AIAnalysisState['errorType'] {
+function detectErrorType(
+  error: any,
+  response?: Response
+): AIAnalysisState['errorType'] {
   // Check response status codes
   if (response) {
     switch (response.status) {
@@ -90,23 +113,42 @@ function detectErrorType(error: any, response?: Response): AIAnalysisState['erro
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
 
-    if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
+    if (
+      message.includes('network') ||
+      message.includes('fetch') ||
+      message.includes('connection')
+    ) {
       return 'network';
     }
 
-    if (message.includes('api key') || message.includes('authentication') || message.includes('unauthorized')) {
+    if (
+      message.includes('api key') ||
+      message.includes('authentication') ||
+      message.includes('unauthorized')
+    ) {
       return 'api_key';
     }
 
-    if (message.includes('rate limit') || message.includes('too many requests')) {
+    if (
+      message.includes('rate limit') ||
+      message.includes('too many requests')
+    ) {
       return 'rate_limit';
     }
 
-    if (message.includes('quota') || message.includes('billing') || message.includes('payment')) {
+    if (
+      message.includes('quota') ||
+      message.includes('billing') ||
+      message.includes('payment')
+    ) {
       return 'quota';
     }
 
-    if (message.includes('server') || message.includes('service') || message.includes('internal')) {
+    if (
+      message.includes('server') ||
+      message.includes('service') ||
+      message.includes('internal')
+    ) {
       return 'server_error';
     }
   }
@@ -164,7 +206,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
     loadCurrentAnalysis();
 
     // Subscribe to store changes
-    const unsubscribe = useJournalStore.subscribe((state) => {
+    const unsubscribe = useJournalStore.subscribe(state => {
       const currentEntry = state.currentEntry;
       console.log('Store changed, updating analysis:', {
         entryId: currentEntry?.id,
@@ -218,11 +260,13 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
 
         // Calculate content similarity (simple approach)
         const contentChanged = currentContent !== originalContent;
-        const contentLengthDiff = Math.abs(currentContent.length - originalContent.length);
-        const significantChange = contentChanged && (
-          contentLengthDiff > 50 || // More than 50 characters difference
-          contentLengthDiff / Math.max(originalContent.length, 1) > 0.2 // More than 20% change
+        const contentLengthDiff = Math.abs(
+          currentContent.length - originalContent.length
         );
+        const significantChange =
+          contentChanged &&
+          (contentLengthDiff > 50 || // More than 50 characters difference
+            contentLengthDiff / Math.max(originalContent.length, 1) > 0.2); // More than 20% change
 
         console.log('Content change analysis:', {
           contentChanged,
@@ -241,7 +285,9 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
             (type === 'summary' && ['emotion', 'full'].includes(cachedType));
 
           if (isCompatible) {
-            console.log('Using cached analysis - no significant content change');
+            console.log(
+              'Using cached analysis - no significant content change'
+            );
             // Use cached analysis
             setState(prev => ({
               ...prev,
@@ -313,7 +359,8 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         const data: AnalyzeResponse = await response.json();
 
         if (!response.ok) {
-          const errorMessage = data.error || `HTTP ${response.status}: Analysis failed`;
+          const errorMessage =
+            data.error || `HTTP ${response.status}: Analysis failed`;
           const errorType = detectErrorType(new Error(errorMessage), response);
 
           setState(prev => ({
@@ -341,7 +388,11 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
           generatedAt: new Date(data.analysis.generatedAt),
           model: data.analysis.model,
           tokenUsage: data.analysis.tokenUsage,
-          type: data.analysis.type as 'summary' | 'emotion' | 'full' | 'suggestions',
+          type: data.analysis.type as
+            | 'summary'
+            | 'emotion'
+            | 'full'
+            | 'suggestions',
           version: data.analysis.version,
         };
 
@@ -363,7 +414,10 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
           });
           console.log('AI analysis saved to journal entry:', entryId);
         } catch (saveError) {
-          console.warn('Failed to save AI analysis to journal entry:', saveError);
+          console.warn(
+            'Failed to save AI analysis to journal entry:',
+            saveError
+          );
           // Don't fail the analysis if saving fails
         }
 

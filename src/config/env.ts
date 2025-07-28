@@ -24,7 +24,9 @@ if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
  */
 export const aiConfig = {
   // Provider selection: 'openai' | 'gemini' | 'ollama'
-  provider: process.env.AI_PROVIDER || (process.env.NODE_ENV === 'development' ? 'ollama' : 'gemini'),
+  provider:
+    process.env.AI_PROVIDER ||
+    (process.env.NODE_ENV === 'development' ? 'ollama' : 'gemini'),
 
   // OpenAI Configuration
   openai: {

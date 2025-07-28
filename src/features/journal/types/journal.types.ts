@@ -33,7 +33,13 @@ export interface Suggestion {
   id: string;
 
   /** Suggestion category */
-  category: 'wellness' | 'productivity' | 'reflection' | 'mindfulness' | 'social' | 'physical';
+  category:
+    | 'wellness'
+    | 'productivity'
+    | 'reflection'
+    | 'mindfulness'
+    | 'social'
+    | 'physical';
 
   /** Suggestion title */
   title: string;

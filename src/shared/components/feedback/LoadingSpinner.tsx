@@ -90,24 +90,31 @@ export function LoadingSpinner({
     return (
       <div className={`flex flex-col items-center space-y-3 ${className}`}>
         {/* Progress Bar */}
-        <div className="w-full max-w-xs">
-          <div className="flex items-center justify-between mb-1">
+        <div className='w-full max-w-xs'>
+          <div className='flex items-center justify-between mb-1'>
             {message && (
-              <span className={`font-medium text-gray-700 dark:text-gray-300 ${textSizeClass}`}>
+              <span
+                className={`font-medium text-gray-700 dark:text-gray-300 ${textSizeClass}`}
+              >
                 {message}
               </span>
             )}
-            <span className={`text-gray-500 dark:text-gray-400 ${textSizeClass}`}>
+            <span
+              className={`text-gray-500 dark:text-gray-400 ${textSizeClass}`}
+            >
               {Math.round(progress)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+          <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2'>
             <div
               className={`h-2 rounded-full transition-all duration-300 ${
-                color === 'blue' ? 'bg-blue-600' :
-                color === 'green' ? 'bg-green-600' :
-                color === 'purple' ? 'bg-purple-600' :
-                'bg-gray-600'
+                color === 'blue'
+                  ? 'bg-blue-600'
+                  : color === 'green'
+                    ? 'bg-green-600'
+                    : color === 'purple'
+                      ? 'bg-purple-600'
+                      : 'bg-gray-600'
               }`}
               style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
             />
@@ -121,19 +128,18 @@ export function LoadingSpinner({
     <div className={`flex flex-col items-center space-y-3 ${className}`}>
       {/* Spinner */}
       <div
-        className={`
-          ${spinnerSizeClass} border-2 ${spinnerColorClass} border-t-transparent 
-          rounded-full animate-spin
-        `}
+        className={`${spinnerSizeClass} border-2 ${spinnerColorClass} border-t-transparent rounded-full animate-spin`}
       />
-      
+
       {/* Message */}
       {message && (
-        <span className={`font-medium text-gray-700 dark:text-gray-300 ${textSizeClass} text-center`}>
+        <span
+          className={`font-medium text-gray-700 dark:text-gray-300 ${textSizeClass} text-center`}
+        >
           {message}
         </span>
       )}
-      
+
       {/* Progress percentage (without bar) */}
       {typeof progress === 'number' && !showProgress && (
         <span className={`text-gray-500 dark:text-gray-400 ${textSizeClass}`}>
@@ -238,27 +244,29 @@ export function AIAnalysisLoading({
   };
 
   return (
-    <div className={`p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
-      <div className="flex items-center space-x-3">
-        <div className="flex-shrink-0">
-          <LoadingSpinner size="md" color="blue" />
+    <div
+      className={`p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+    >
+      <div className='flex items-center space-x-3'>
+        <div className='flex-shrink-0'>
+          <LoadingSpinner size='md' color='blue' />
         </div>
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-1">
-            <span className="text-lg">{stageIcons[stage]}</span>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <div className='flex-1'>
+          <div className='flex items-center space-x-2 mb-1'>
+            <span className='text-lg'>{stageIcons[stage]}</span>
+            <h3 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
               AI Analysis
             </h3>
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className='text-sm text-gray-600 dark:text-gray-400'>
             {stageMessages[stage]}
           </p>
-          
+
           {typeof progress === 'number' && (
-            <div className="mt-3">
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+            <div className='mt-3'>
+              <div className='w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5'>
                 <div
-                  className="h-1.5 bg-blue-600 rounded-full transition-all duration-500"
+                  className='h-1.5 bg-blue-600 rounded-full transition-all duration-500'
                   style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
                 />
               </div>
@@ -275,20 +283,22 @@ export function AIAnalysisLoading({
  */
 export function AIAnalysisSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}>
-      <div className="flex items-start space-x-3">
-        <Skeleton shape="circle" width={32} height={32} />
-        <div className="flex-1 space-y-3">
-          <Skeleton height="1rem" width="40%" />
-          <div className="space-y-2">
-            <Skeleton height="0.875rem" width="100%" />
-            <Skeleton height="0.875rem" width="85%" />
-            <Skeleton height="0.875rem" width="70%" />
+    <div
+      className={`p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 ${className}`}
+    >
+      <div className='flex items-start space-x-3'>
+        <Skeleton shape='circle' width={32} height={32} />
+        <div className='flex-1 space-y-3'>
+          <Skeleton height='1rem' width='40%' />
+          <div className='space-y-2'>
+            <Skeleton height='0.875rem' width='100%' />
+            <Skeleton height='0.875rem' width='85%' />
+            <Skeleton height='0.875rem' width='70%' />
           </div>
-          <div className="flex space-x-2">
-            <Skeleton height="1.5rem" width="4rem" shape="rounded" />
-            <Skeleton height="1.5rem" width="3rem" shape="rounded" />
-            <Skeleton height="1.5rem" width="5rem" shape="rounded" />
+          <div className='flex space-x-2'>
+            <Skeleton height='1.5rem' width='4rem' shape='rounded' />
+            <Skeleton height='1.5rem' width='3rem' shape='rounded' />
+            <Skeleton height='1.5rem' width='5rem' shape='rounded' />
           </div>
         </div>
       </div>

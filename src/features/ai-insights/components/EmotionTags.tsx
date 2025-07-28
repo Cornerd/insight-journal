@@ -48,7 +48,9 @@ function getEmotionColors(category: 'positive' | 'negative' | 'neutral') {
 /**
  * Get sentiment indicator colors
  */
-function getSentimentColors(sentiment: 'positive' | 'negative' | 'neutral' | 'mixed') {
+function getSentimentColors(
+  sentiment: 'positive' | 'negative' | 'neutral' | 'mixed'
+) {
   switch (sentiment) {
     case 'positive':
       return {
@@ -96,15 +98,17 @@ export function EmotionTags({
   }
 
   // Sort emotions by intensity (highest first)
-  const sortedEmotions = [...emotions].sort((a, b) => b.intensity - a.intensity);
+  const sortedEmotions = [...emotions].sort(
+    (a, b) => b.intensity - a.intensity
+  );
 
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Sentiment Overview */}
       {sentiment && (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center space-x-2'>
+            <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
               Overall Sentiment:
             </span>
             <div
@@ -114,12 +118,12 @@ export function EmotionTags({
               `}
             >
               <span>{getSentimentColors(sentiment).icon}</span>
-              <span className="capitalize">{sentiment}</span>
+              <span className='capitalize'>{sentiment}</span>
             </div>
           </div>
-          
+
           {confidence && (
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className='text-xs text-gray-500 dark:text-gray-400'>
               {Math.round(confidence * 100)}% confidence
             </div>
           )}
@@ -128,19 +132,19 @@ export function EmotionTags({
 
       {/* Emotion Tags */}
       <div>
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className='flex items-center space-x-2 mb-2'>
+          <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
             Detected Emotions:
           </span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className='text-xs text-gray-500 dark:text-gray-400'>
             ({emotions.length} emotion{emotions.length !== 1 ? 's' : ''})
           </span>
         </div>
-        
-        <div className="flex flex-wrap gap-2">
+
+        <div className='flex flex-wrap gap-2'>
           {sortedEmotions.map((emotion, index) => {
             const colors = getEmotionColors(emotion.category);
-            
+
             return (
               <div
                 key={`${emotion.name}-${index}`}
@@ -151,10 +155,10 @@ export function EmotionTags({
                 `}
                 title={`${emotion.name}: ${formatIntensity(emotion.intensity)} intensity`}
               >
-                <span className="text-base">{emotion.emoji}</span>
-                <span className="font-medium capitalize">{emotion.name}</span>
+                <span className='text-base'>{emotion.emoji}</span>
+                <span className='font-medium capitalize'>{emotion.name}</span>
                 {showIntensity && (
-                  <span className="text-xs opacity-75">
+                  <span className='text-xs opacity-75'>
                     {formatIntensity(emotion.intensity)}
                   </span>
                 )}
@@ -166,15 +170,18 @@ export function EmotionTags({
 
       {/* Emotion Categories Summary */}
       {emotions.length > 1 && (
-        <div className="text-xs text-gray-500 dark:text-gray-400">
-          <div className="flex items-center space-x-4">
+        <div className='text-xs text-gray-500 dark:text-gray-400'>
+          <div className='flex items-center space-x-4'>
             {['positive', 'negative', 'neutral'].map(category => {
-              const categoryEmotions = emotions.filter(e => e.category === category);
+              const categoryEmotions = emotions.filter(
+                e => e.category === category
+              );
               if (categoryEmotions.length === 0) return null;
-              
+
               return (
                 <span key={category}>
-                  <span className="capitalize">{category}</span>: {categoryEmotions.length}
+                  <span className='capitalize'>{category}</span>:{' '}
+                  {categoryEmotions.length}
                 </span>
               );
             })}
@@ -205,24 +212,24 @@ export function EmotionTagsCompact({
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
       {sentiment && (
-        <span className="text-lg" title={`Overall sentiment: ${sentiment}`}>
+        <span className='text-lg' title={`Overall sentiment: ${sentiment}`}>
           {getSentimentColors(sentiment).icon}
         </span>
       )}
-      
-      <div className="flex items-center space-x-1">
+
+      <div className='flex items-center space-x-1'>
         {topEmotions.map((emotion, index) => (
           <span
             key={`${emotion.name}-${index}`}
-            className="text-sm"
+            className='text-sm'
             title={`${emotion.name}: ${formatIntensity(emotion.intensity)}`}
           >
             {emotion.emoji}
           </span>
         ))}
-        
+
         {emotions.length > 3 && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
+          <span className='text-xs text-gray-500 dark:text-gray-400'>
             +{emotions.length - 3}
           </span>
         )}

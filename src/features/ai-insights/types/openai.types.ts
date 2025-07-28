@@ -58,6 +58,7 @@ export interface OpenAIError {
 export type OpenAIErrorType =
   | 'authentication_error'
   | 'rate_limit_error'
+  | 'quota_exceeded_error'
   | 'network_error'
   | 'api_error'
   | 'validation_error'

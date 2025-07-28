@@ -219,6 +219,9 @@ export function getUserFriendlyErrorMessage(
     case 'rate_limit_error':
       return 'The AI service is currently busy. Please try again in a few moments.';
 
+    case 'quota_exceeded_error':
+      return 'Your AI service quota has been exceeded. Please check your account billing and add credits.';
+
     case 'network_error':
       return 'Unable to connect to the AI service. Please check your internet connection and try again.';
 

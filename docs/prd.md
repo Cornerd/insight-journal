@@ -1,7 +1,7 @@
 1. # Product Requirements Document: Insight Journal – AI-Powered Daily Reflection Web App
 
-   **Document Version:** 0.1
-   **Date:** 2025-07-20
+   **Document Version:** 0.2
+   **Date:** 2025-07-29
    **Author:** PM Agent
 
    ---
@@ -24,6 +24,7 @@
    | Date       | Version | Description   | Author |
    | :--------- | :------ | :------------ | :----- |
    | 2025-07-20 | 0.1     | Initial Draft | PM     |
+   | 2025-07-29 | 0.2     | AI Analysis Enhancements | PM     |
 
    ---
 
@@ -37,6 +38,9 @@
    * **FR4: Suggestion Generation:** The AI shall generate personalized suggestions based on the note's content and emotional analysis, such as improvement advice or psychological support messages.
    * **FR5: Local Data Storage:** All user notes, AI summaries, emotion analysis, and suggestions must be saved locally using `localStorage`.
    * **FR6: Responsive Design:** The application's user interface must adapt and be fully functional across various devices, including mobile phones and desktop browsers.
+   * **FR7: Smart Caching System:** The system shall implement intelligent caching to avoid redundant AI analysis requests, detecting content changes and reusing existing analysis when appropriate.
+   * **FR8: Manual Re-analysis:** Users must be able to manually trigger re-analysis of their journal entries to get updated insights based on current content.
+   * **FR9: Error Recovery:** The system shall provide comprehensive error handling with user-friendly messages and recovery options for AI service failures.
 
    ### 2.2 Non-Functional Requirements (NFR)
 
@@ -48,6 +52,9 @@
    * **NFR6: Security (API Key Handling):** The application should prompt users to configure their OpenAI API key securely (e.g., via environment variables in a deployed version, or direct input for local testing).
    * **NFR7: UI Performance:** The UI should be smooth and responsive, with light animations, especially during AI processing.
    * **NFR8: Accessibility (Basic):** The application should aim for basic web accessibility, ensuring usability for a broad range of users.
+   * **NFR9: Token Optimization:** The application should minimize OpenAI API token usage through intelligent caching and content change detection to reduce costs.
+   * **NFR10: Real-time State Management:** The application should provide real-time feedback on AI analysis status with proper loading states and progress indicators.
+   * **NFR11: Data Persistence:** AI analysis results should be automatically saved and persist across browser sessions without user intervention.
 
    ---
 
@@ -110,6 +117,9 @@
    * **Markdown Editor:** A suitable Markdown editor library will be integrated to support rich text/Markdown input for notes.
    * **Charting Library (Future):** For future data analysis features, `echarts`, `Recharts`, `Chart.js`, or `D3.js` are noted as potential charting libraries.
    * **Internationalization (Future):** `i18n` is noted for future multi-language support.
+   * **AI Provider Support:** The system will support multiple AI providers (OpenAI, Gemini, Ollama) with configurable switching and fallback mechanisms.
+   * **Content Change Detection:** Intelligent algorithms will detect significant content changes to determine when re-analysis is needed.
+   * **Debug and Monitoring:** Comprehensive logging and debug panels will be implemented for development and troubleshooting.
 
    ---
 
@@ -135,20 +145,26 @@
            * Responsive layout for mobile and desktop
 
    * **Epic 2: AI-Powered Insights & Analysis**
-       * **Goal:** Integrate the OpenAI API to automatically generate summaries, perform emotion analysis, and provide personalized suggestions for journal entries, delivering the core AI value proposition.
+       * **Goal:** Integrate multiple AI providers to automatically generate summaries, perform emotion analysis, and provide personalized suggestions for journal entries, with intelligent caching and user control features.
        * **Includes:**
-           * Integrate OpenAI API (GPT 3.5/4)
+           * Integrate multiple AI providers (OpenAI, Gemini, Ollama)
            * Prompt engineering for summary generation
-           * Emotion classification (e.g., positive/neutral/negative)
-           * Personalized suggestions based on emotion
-           * Implement loading states & error handling for AI requests
+           * Emotion classification with detailed emotion tags
+           * Personalized suggestions based on emotion and content
+           * Implement loading states & comprehensive error handling
+           * Smart caching system with content change detection
+           * Manual re-analysis functionality
+           * Real-time status indicators and debug panels
 
-   * **Epic 3 (Future): User Authentication & Cloud Storage**
+   * **Epic 3: User Authentication & Cloud Storage**
        * **Goal:** Enable users to securely save and access their journal entries across multiple devices through user authentication and cloud-based data storage, addressing long-term data persistence and multi-device access.
        * **Includes:**
-           * GitHub/Google login integration (e.g., with NextAuth.js)
-           * Store journals in Firebase/Supabase
-           * Implement user-specific journal access control
+           * User authentication with multiple providers (GitHub, Google, Email)
+           * Cloud data storage with Supabase integration
+           * Data migration from localStorage to cloud storage
+           * User-specific journal access control and privacy
+           * Multi-device synchronization and conflict resolution
+           * Account management and user preferences
 
    ---
 
@@ -341,7 +357,197 @@
    4.  **2.5.4:** Users are guided on how to resolve common issues (e.g., "Check your OpenAI API key settings").
    5.  **2.5.5:** The loading indicator is cleared once the AI response is received or an error occurs.
 
+   ### Story 2.6: Implement Smart Caching System
+
+   As a **user**,
+   I want to **avoid waiting for AI analysis when my content hasn't significantly changed**,
+   so that I can quickly access my insights without unnecessary delays or costs.
+
+   **Acceptance Criteria:**
+   1.  **2.6.1:** The system automatically detects when journal content has changed significantly (>50 characters or >20% change).
+   2.  **2.6.2:** Previously generated AI analysis is cached and reused when content changes are minimal.
+   3.  **2.6.3:** Cached analysis results are automatically loaded when opening existing journal entries.
+   4.  **2.6.4:** The system handles different analysis types (summary, emotion, full) with appropriate compatibility checking.
+   5.  **2.6.5:** Cache data persists across browser sessions using localStorage.
+
+   ### Story 2.7: Implement Manual Re-analysis Functionality
+
+   As a **user**,
+   I want to **manually trigger re-analysis of my journal entries**,
+   so that I can get updated insights when I've made significant changes or want fresh perspectives.
+
+   **Acceptance Criteria:**
+   1.  **2.7.1:** A "Re-analyze" button is prominently displayed when viewing journal entries with existing AI analysis.
+   2.  **2.7.2:** Clicking the re-analyze button clears existing analysis and triggers a fresh AI request.
+   3.  **2.7.3:** The button includes appropriate visual feedback (cursor pointer, hover effects).
+   4.  **2.7.4:** New analysis results replace the previous ones and are saved to localStorage.
+   5.  **2.7.5:** The button is disabled during analysis to prevent multiple simultaneous requests.
+
+   ### Story 2.8: Implement Multiple AI Provider Support
+
+   As a **user**,
+   I want to **have access to different AI providers for analysis**,
+   so that I can choose the best service for my needs and have fallback options.
+
+   **Acceptance Criteria:**
+   1.  **2.8.1:** The system supports OpenAI, Google Gemini, and Ollama (local) AI providers.
+   2.  **2.8.2:** Users can configure their preferred AI provider through environment variables or settings.
+   3.  **2.8.3:** Each provider has optimized prompts and response parsing for consistent output format.
+   4.  **2.8.4:** Error handling is provider-specific with appropriate user guidance.
+   5.  **2.8.5:** The system gracefully handles provider-specific limitations and features.
+
+   ### Epic 3: User Authentication & Cloud Storage
+
+   **Goal:** Enable users to securely save and access their journal entries across multiple devices through user authentication and cloud-based data storage, addressing long-term data persistence and multi-device access.
+
+   ### Story 3.1: Implement User Authentication System
+
+   As a **user**,
+   I want to **create an account and log in securely**,
+   so that I can access my journal entries from any device and keep my data private.
+
+   **Acceptance Criteria:**
+   1.  **3.1.1:** Users can sign up with email/password, GitHub, or Google accounts.
+   2.  **3.1.2:** Authentication is handled securely with proper session management.
+   3.  **3.1.3:** Users can log in and log out from the application.
+   4.  **3.1.4:** Authentication state persists across browser sessions.
+   5.  **3.1.5:** Protected routes require authentication to access.
+
+   ### Story 3.2: Implement Cloud Data Storage with Supabase
+
+   As a **user**,
+   I want to **have my journal entries stored in the cloud**,
+   so that I can access them from multiple devices and never lose my data.
+
+   **Acceptance Criteria:**
+   1.  **3.2.1:** Journal entries are stored in Supabase database with proper schema.
+   2.  **3.2.2:** Each user's data is isolated and secure from other users.
+   3.  **3.2.3:** CRUD operations work correctly for journal entries in the cloud.
+   4.  **3.2.4:** AI analysis results are also stored in the cloud with journal entries.
+   5.  **3.2.5:** Database operations include proper error handling and retry logic.
+
+   ### Story 3.3: Implement Data Migration from localStorage
+
+   As a **user**,
+   I want to **migrate my existing journal entries from local storage to the cloud**,
+   so that I don't lose any of my previous entries when I create an account.
+
+   **Acceptance Criteria:**
+   1.  **3.3.1:** System detects existing localStorage data when user first logs in.
+   2.  **3.3.2:** Users are prompted to migrate their local data to the cloud.
+   3.  **3.3.3:** Migration process preserves all journal content and AI analysis.
+   4.  **3.3.4:** Users can choose to keep or clear local data after migration.
+   5.  **3.3.5:** Migration handles conflicts between local and cloud data gracefully.
+
+   ### Story 3.4: Implement Multi-Device Synchronization
+
+   As a **user**,
+   I want to **have my journal entries synchronized across all my devices**,
+   so that I can write on one device and read on another seamlessly.
+
+   **Acceptance Criteria:**
+   1.  **3.4.1:** Changes made on one device appear on other devices in real-time or near real-time.
+   2.  **3.4.2:** Conflict resolution handles simultaneous edits from multiple devices.
+   3.  **3.4.3:** Offline changes are synchronized when the device comes back online.
+   4.  **3.4.4:** Users receive notifications about sync status and conflicts.
+   5.  **3.4.5:** Sync works efficiently without excessive bandwidth usage.
+
+   ### Story 3.5: Implement User Account Management
+
+   As a **user**,
+   I want to **manage my account settings and preferences**,
+   so that I can customize my experience and control my data.
+
+   **Acceptance Criteria:**
+   1.  **3.5.1:** Users can view and edit their profile information.
+   2.  **3.5.2:** Users can change their password or update authentication methods.
+   3.  **3.5.3:** Users can configure AI analysis preferences (provider, frequency).
+   4.  **3.5.4:** Users can export their data or delete their account.
+   5.  **3.5.5:** Account settings are synchronized across devices.
+
    ---
+
+    **Goal:** Enable users to securely save and access their journal entries across multiple devices through robust user authentication and cloud-based data storage using Supabase. This epic addresses long-term data persistence, multi-device access, and enhances data security.
+
+    ### Story 3.1: Supabase Project Setup and Client Integration
+
+    As a **developer**,
+    I want to **initialize a Supabase project and integrate its client library into the application**,
+    so that the application can securely interact with Supabase for authentication and database operations.
+
+    **Acceptance Criteria:**
+    1.  **3.1.1:** A new Supabase project is created and configured.
+    2.  **3.1.2:** The Supabase client library (`@supabase/supabase-js`) is installed and configured in the Next.js project.
+    3.  **3.1.3:** Supabase API URL and `anon` key are securely managed as environment variables (`SUPABASE_URL`, `SUPABASE_ANON_KEY`).
+    4.  **3.1.4:** A utility function or service is created to initialize and provide the Supabase client instance.
+    5.  **3.1.5:** A basic connectivity test (e.g., fetching a public, non-sensitive record from a new Supabase table or confirming client initialization) is successfully performed.
+
+    ### Story 3.2: User Registration and Email/Password Login
+
+    As a **user**,
+    I want to **register for an account and log in using my email and password**,
+    so that my journal entries can be securely associated with my identity and stored in the cloud.
+
+    **Acceptance Criteria:**
+    1.  **3.2.1:** A user registration interface is available, requiring email and password input.
+    2.  **3.2.2:** Upon successful registration, a new user account is created in Supabase Authentication.
+    3.  **3.2.3:** A user login interface is available, requiring email and password input.
+    4.  **3.2.4:** Upon successful login, the user's session is established with Supabase, and a secure JWT token is received.
+    5.  **3.2.5:** Error handling is implemented for registration and login failures (e.g., invalid credentials, email already in use).
+    6.  **3.2.6:** Users receive visual feedback (e.g., success messages, error alerts) during registration and login processes.
+
+    ### Story 3.3: User Session Management and Logout
+
+    As a **user**,
+    I want to **remain logged in across sessions and be able to securely log out**,
+    so that I don't have to re-enter my credentials frequently and can protect my account.
+
+    **Acceptance Criteria:**
+    1.  **3.3.1:** User authentication sessions persist across browser tabs and after closing/reopening the browser.
+    2.  **3.3.2:** A "Logout" option is available in the UI when a user is authenticated.
+    3.  **3.3.3:** Clicking "Logout" securely terminates the user's session with Supabase.
+    4.  **3.3.4:** After logging out, the user is redirected to a public page (e.g., home page or login page).
+    5.  **3.3.5:** The application's UI reflects the authenticated state (e.g., showing user email, hiding login/register buttons).
+
+    ### Story 3.4: Migrate Existing LocalStorage Journal Entries to Supabase
+
+    As a **user with existing local journal entries**,
+    I want to **migrate my `localStorage` entries to my new Supabase account**,
+    so that my historical data is preserved and accessible in the cloud.
+
+    **Acceptance Criteria:**
+    1.  **3.4.1:** A clear prompt or migration option is presented to logged-in users who have existing journal entries in `localStorage` but not yet in Supabase.
+    2.  **3.4.2:** Upon user confirmation, all existing journal entries from `localStorage` are uploaded and stored in a new table in the Supabase database.
+    3.  **3.4.3:** Each migrated entry is associated with the currently logged-in user's ID in Supabase.
+    4.  **3.4.4:** Duplicate entries (e.g., if a user logs in on a new device with local data) are handled gracefully (e.g., by unique ID or timestamp, avoiding data loss).
+    5.  **3.4.5:** The local `localStorage` entries are cleared *only after* successful migration to Supabase.
+    6.  **3.4.6:** A progress indicator and success/failure messages are provided during the migration process.
+
+    ### Story 3.5: Adapt Journal Entry CRUD Operations to Supabase
+
+    As a **user**,
+    I want to **create, read, update, and delete my journal entries directly from Supabase**,
+    so that my data is consistently stored in the cloud and accessible from any device.
+
+    **Acceptance Criteria:**
+    1.  **3.5.1:** All new journal entries created by an authenticated user are saved to the Supabase database instead of `localStorage`.
+    2.  **3.5.2:** When viewing journal history, entries are fetched from Supabase, filtered by the logged-in user's ID.
+    3.  **3.5.3:** Editing an existing journal entry updates the corresponding record in the Supabase database.
+    4.  **3.5.4:** Deleting a journal entry removes the record from the Supabase database.
+    5.  **3.5.5:** Real-time feedback (loading states, success/error messages) is provided for all CRUD operations.
+    6.  **3.5.6:** The application correctly handles cases where a user has no entries in Supabase yet.
+
+    ### Story 3.6: Update AI Analysis Workflow for Supabase Integration
+
+    As a **user**,
+    I want my **AI-generated summaries, emotions, and suggestions to be stored and retrieved from Supabase**,
+    so that these insights are persistent and available across devices, alongside my journal entries.
+
+    **Acceptance Criteria:**
+    1.  **3.6.1:** When AI analysis (summary, emotion, suggestions) is generated for a journal entry, the results are stored as part of that journal entry's record in the Supabase database.
+    2.  **3.6.2:** When a journal entry is retrieved from Supabase, its associated AI analysis results are also fetched and displayed.
+    3.  **3.6.3:** The smart caching mechanism (Story 2.6) is adapted to work with Supabase data, avoiding redundant AI calls for entries already analyzed in the cloud.
+    4.  **3.6.4:** Manual re-analysis (Story 2.7) updates the AI results directly in the Supabase database.
 
    ## 7. Checklist Results Report
 
@@ -349,12 +555,12 @@
 
    ---
 
-   ## 8. Next Steps
+    ## 8. Next Steps
 
-   ### Prompt for UX Expert (if applicable)
+    ### UX Expert Prompt
 
-   *(This section will be populated based on the UX Design Goals after the checklist.)*
+    The Product Requirements Document (PRD) for the "Insight Journal – AI-Powered Daily Reflection Web App" is now complete. Please review the "User Interface Design Goals" section (Section 3) in the PRD. Your task is to elaborate on these high-level goals and translate them into a more detailed UI/UX specification or wireframes, focusing on the core journaling experience (Epic 1) and the integration of AI-powered insights (Epic 2). Pay particular attention to the "Overall UX Vision," "Key Interaction Paradigms," "Core Screens and Views," and "Branding" to ensure the design aligns with the product's calm, intuitive, and supportive feel.
 
-   ### Prompt for Architect
+    ### Architect Prompt
 
-   *(This section will be populated based on the Technical Assumptions and Epic Details after the checklist.)*
+    The Product Requirements Document (PRD) for the "Insight Journal – AI-Powered Daily Reflection Web App" is now complete and includes detailed Epics and Stories. Please review the entire PRD, paying special attention to the "Technical Assumptions" (Section 4) and the "Epic List" and "Epic Details" (Sections 5 and 6), which now include the refined Epic 3 for Supabase Authentication and Cloud Storage. Your task is to create the comprehensive technical architecture and design for this application, covering both the MVP functionality and laying the groundwork for future phases as outlined. Your design should leverage the specified technical stack and address all functional and non-functional requirements.

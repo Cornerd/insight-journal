@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { AuthButton } from '@/components/auth/AuthButton';
 
 export default function Home() {
   return (
@@ -27,12 +28,7 @@ export default function Home() {
             >
               About
             </Link>
-            <Link
-              href='/journal'
-              className='bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors'
-            >
-              Start Journaling
-            </Link>
+            <AuthButton />
           </div>
         </div>
       </nav>

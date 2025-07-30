@@ -43,6 +43,7 @@ export function useCloudAIAnalysis() {
               generatedAt: new Date(cloudAnalysis.generated_at),
               model: cloudAnalysis.model,
               type: 'full' as const,
+              version: 'v1.0', // Default version for cloud-loaded analysis
             };
 
             // Update local store with cloud analysis

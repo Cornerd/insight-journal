@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { cloudStorageService } from '@/features/journal/services/cloudStorageService';
+import { serverCloudStorageService } from '@/features/journal/services/serverCloudStorageService';
 
 interface LocalJournalEntry {
   id: string;
@@ -76,8 +76,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    // Get user ID from session
+    const userId = session.user.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found in session' },
+        { status: 400 }
+      );
+    }
+
     console.log(
-      `Starting migration of ${body.entries.length} entries for user ${session.user.email}`
+      `Starting migration of ${body.entries.length} entries for user ${session.user.email} (ID: ${userId})`
     );
 
     const result: MigrationResult = {
@@ -92,7 +101,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Check if user already has entries in cloud storage
-    const existingEntries = await cloudStorageService.getJournalEntries();
+    let existingEntries;
+    try {
+      existingEntries =
+        await serverCloudStorageService.getJournalEntries(userId);
+    } catch (error) {
+      console.warn('Failed to get existing entries:', error);
+      existingEntries = [];
+    }
     const existingTitles = new Set(existingEntries.map(entry => entry.title));
 
     for (const localEntry of body.entries) {
@@ -108,7 +124,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         }
 
         // Create cloud entry
-        const cloudEntry = await cloudStorageService.createJournalEntry(
+        const cloudEntry = await serverCloudStorageService.createJournalEntry(
+          userId,
           localEntry.title || 'Migrated Entry',
           localEntry.content
         );
@@ -119,7 +136,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         // Migrate AI analysis if it exists
         if (localEntry.aiAnalysis) {
           try {
-            await cloudStorageService.saveAIAnalysis(cloudEntry.id, {
+            await serverCloudStorageService.saveAIAnalysis(cloudEntry.id, {
               summary: localEntry.aiAnalysis.summary,
               emotions: localEntry.aiAnalysis.emotions
                 ? { emotions: localEntry.aiAnalysis.emotions }
@@ -186,8 +203,18 @@ export async function GET(): Promise<NextResponse> {
       );
     }
 
+    // Get user ID from session
+    const userId = session.user.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'User ID not found in session' },
+        { status: 400 }
+      );
+    }
+
     // Get current cloud entries count
-    const cloudEntries = await cloudStorageService.getJournalEntries();
+    const cloudEntries =
+      await serverCloudStorageService.getJournalEntries(userId);
 
     return NextResponse.json({
       success: true,

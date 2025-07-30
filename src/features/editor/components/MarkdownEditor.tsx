@@ -5,12 +5,15 @@ import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { useJournalStore } from '../../../shared/store/journalStore';
+import { useCloudJournalStore } from '../../../shared/store/cloudJournalStore';
+import { useSession } from 'next-auth/react';
 import {
   useAIAnalysis,
   isContentSuitableForAnalysis,
 } from '../../ai-insights/hooks/useAIAnalysis';
 import { AIAnalysisCard } from '../../ai-insights/components/AIAnalysisCard';
 import { AIDebugPanel } from '../../ai-insights/components/AIDebugPanel';
+import { OfflineIndicator } from '../../../components/ui/OfflineIndicator';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -19,17 +22,41 @@ interface MarkdownEditorProps {
 export function MarkdownEditor({
   placeholder = 'Start writing your thoughts...',
 }: MarkdownEditorProps) {
-  // Journal store state and actions
+  // Session for cloud storage
+  const { data: session } = useSession();
+
+  // Local journal store (fallback and cache)
   const {
-    currentEntry,
-    isLoading,
-    error,
-    lastSaved,
-    addEntry,
-    updateEntry,
-    loadEntries,
-    clearError,
+    currentEntry: localCurrentEntry,
+    isLoading: localIsLoading,
+    error: localError,
+    lastSaved: localLastSaved,
+    addEntry: addLocalEntry,
+    updateEntry: updateLocalEntry,
+    loadEntries: loadLocalEntries,
+    clearError: clearLocalError,
   } = useJournalStore();
+
+  // Cloud journal store (primary when authenticated)
+  const {
+    currentEntry: cloudCurrentEntry,
+    isCreating: cloudIsCreating,
+    isUpdating: cloudIsUpdating,
+    error: cloudError,
+    lastSyncTime,
+    createEntry: createCloudEntry,
+    updateEntry: updateCloudEntry,
+    loadEntries: loadCloudEntries,
+    clearError: clearCloudError,
+  } = useCloudJournalStore();
+
+  // Use cloud data when authenticated, local data otherwise
+  const currentEntry = session?.user ? cloudCurrentEntry : localCurrentEntry;
+  const isLoading = session?.user
+    ? cloudIsCreating || cloudIsUpdating
+    : localIsLoading;
+  const error = session?.user ? cloudError : localError;
+  const lastSaved = session?.user ? lastSyncTime : localLastSaved;
 
   // Local state for editor
   const [content, setContent] = useState('');
@@ -53,8 +80,14 @@ export function MarkdownEditor({
 
   // Load entries on component mount
   useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+    if (session?.user) {
+      // Load from cloud when authenticated
+      loadCloudEntries();
+    } else {
+      // Load from local storage when not authenticated
+      loadLocalEntries();
+    }
+  }, [session?.user, loadCloudEntries, loadLocalEntries]);
 
   // Sync content with current entry
   useEffect(() => {
@@ -82,24 +115,46 @@ export function MarkdownEditor({
 
     try {
       let savedEntryId: string;
-      if (currentEntry) {
-        // Update existing entry
-        await updateEntry({
-          id: currentEntry.id,
-          content,
-        });
-        savedEntryId = currentEntry.id;
-      } else {
-        // Create new entry
-        const result = await addEntry({
-          content,
-        });
-        if (result.success) {
-          savedEntryId = result.data.id;
+
+      if (session?.user) {
+        // Save to cloud when authenticated
+        if (currentEntry) {
+          // Update existing entry
+          const updatedEntry = await updateCloudEntry(currentEntry.id, {
+            content,
+          });
+          savedEntryId = updatedEntry?.id || currentEntry.id;
         } else {
-          throw new Error(result.error.message);
+          // Create new entry
+          const newEntry = await createCloudEntry('', content);
+          if (newEntry) {
+            savedEntryId = newEntry.id;
+          } else {
+            throw new Error('Failed to create cloud entry');
+          }
+        }
+      } else {
+        // Save to local storage when not authenticated
+        if (currentEntry) {
+          // Update existing entry
+          await updateLocalEntry({
+            id: currentEntry.id,
+            content,
+          });
+          savedEntryId = currentEntry.id;
+        } else {
+          // Create new entry
+          const result = await addLocalEntry({
+            content,
+          });
+          if (result.success) {
+            savedEntryId = result.data.id;
+          } else {
+            throw new Error(result.error.message);
+          }
         }
       }
+
       setHasUnsavedChanges(false);
 
       // Trigger AI analysis if content is suitable
@@ -109,11 +164,17 @@ export function MarkdownEditor({
           const aiAnalysis = await analyzeEntry(content, savedEntryId, 'full');
           if (aiAnalysis) {
             console.log('AI analysis completed, updating entry');
-            // Update entry with AI analysis
-            await updateEntry({
-              id: savedEntryId,
-              aiAnalysis,
-            });
+            // Update entry with AI analysis (both local and cloud will be handled by the AI analysis hook)
+            if (session?.user) {
+              // Cloud storage will be handled automatically by the AI analysis hook
+              console.log('AI analysis saved to cloud storage');
+            } else {
+              // Update local entry with AI analysis
+              await updateLocalEntry({
+                id: savedEntryId,
+                aiAnalysis,
+              });
+            }
           }
         } catch (analysisError) {
           console.warn('AI analysis failed:', analysisError);
@@ -125,7 +186,16 @@ export function MarkdownEditor({
     } catch (error) {
       console.error('Failed to save entry:', error);
     }
-  }, [content, currentEntry, updateEntry, addEntry, analyzeEntry]);
+  }, [
+    content,
+    currentEntry,
+    session?.user,
+    updateCloudEntry,
+    createCloudEntry,
+    updateLocalEntry,
+    addLocalEntry,
+    analyzeEntry,
+  ]);
 
   // Auto-save functionality
   const autoSave = useCallback(async () => {
@@ -277,9 +347,12 @@ export function MarkdownEditor({
             )}
           </button>
 
+          {/* Cloud sync status */}
+          {session?.user && <OfflineIndicator className='mr-2' />}
+
           {lastSaved && (
             <span className='text-sm text-gray-500 dark:text-gray-400'>
-              Last saved:{' '}
+              {session?.user ? 'Last synced' : 'Last saved'}:{' '}
               {(() => {
                 try {
                   const date =
@@ -302,7 +375,7 @@ export function MarkdownEditor({
             <div className='flex items-center space-x-2 text-red-600 dark:text-red-400'>
               <span className='text-sm'>❌ {error}</span>
               <button
-                onClick={clearError}
+                onClick={session?.user ? clearCloudError : clearLocalError}
                 className='text-xs underline hover:no-underline cursor-pointer'
               >
                 Dismiss

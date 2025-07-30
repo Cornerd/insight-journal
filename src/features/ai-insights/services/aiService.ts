@@ -64,68 +64,127 @@ async function callOpenAI(
 }
 
 /**
- * Google Gemini Service Implementation
+ * Retry helper for API calls
+ */
+async function retryApiCall<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt === maxRetries) {
+        throw error;
+      }
+
+      // Check if it's a retryable error
+      if (error instanceof Error) {
+        const isRetryable =
+          error.message.includes('overloaded') ||
+          error.message.includes('rate limit') ||
+          error.message.includes('server error') ||
+          error.message.includes('timeout');
+
+        if (isRetryable) {
+          const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+          console.log(
+            `API call failed, retrying in ${delay}ms (attempt ${attempt}/${maxRetries}): ${error.message}`
+          );
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error('Max retries exceeded');
+}
+
+/**
+ * Google Gemini Service Implementation with retry logic
  */
 async function callGemini(
   messages: AIMessage[],
   config: AIServiceConfig
 ): Promise<AIResponse> {
-  // Convert messages to Gemini format
-  const systemMessage = messages.find(m => m.role === 'system');
-  const userMessages = messages.filter(m => m.role === 'user');
+  return retryApiCall(async () => {
+    // Convert messages to Gemini format
+    const systemMessage = messages.find(m => m.role === 'system');
+    const userMessages = messages.filter(m => m.role === 'user');
 
-  const prompt = systemMessage
-    ? `${systemMessage.content}\n\nUser: ${userMessages.map(m => m.content).join('\n')}`
-    : userMessages.map(m => m.content).join('\n');
+    const prompt = systemMessage
+      ? `${systemMessage.content}\n\nUser: ${userMessages.map(m => m.content).join('\n')}`
+      : userMessages.map(m => m.content).join('\n');
 
-  const response = await fetch(
-    `${aiConfig.gemini.baseUrl}/models/${aiConfig.gemini.model}:generateContent?key=${aiConfig.gemini.apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'InsightJournal/1.0',
-        Referer: 'http://localhost:3001',
-        Origin: 'http://localhost:3001',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
-        generationConfig: {
-          temperature: config.temperature || 0.3,
-          maxOutputTokens: config.maxTokens || 500,
+    const response = await fetch(
+      `${aiConfig.gemini.baseUrl}/models/${aiConfig.gemini.model}:generateContent?key=${aiConfig.gemini.apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'InsightJournal/1.0',
+          Referer: 'http://localhost:3001',
+          Origin: 'http://localhost:3001',
         },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(
-      error.error?.message || `Gemini API error: ${response.status}`
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: config.temperature || 0.3,
+            maxOutputTokens: config.maxTokens || 500,
+          },
+        }),
+      }
     );
-  }
 
-  const data = await response.json();
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      const errorMessage =
+        error.error?.message || `Gemini API error: ${response.status}`;
 
-  if (!data.candidates || !data.candidates[0]) {
-    throw new Error('No response from Gemini API');
-  }
+      // Provide helpful error messages for common issues
+      if (response.status === 429 || errorMessage.includes('overloaded')) {
+        throw new Error(
+          'Gemini API is temporarily overloaded. Please try again in a few moments.'
+        );
+      }
 
-  return {
-    content: data.candidates[0].content.parts[0].text,
-    model: config.model || aiConfig.gemini.model,
-    usage: data.usageMetadata
-      ? {
-          prompt_tokens: data.usageMetadata.promptTokenCount || 0,
-          completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
-          total_tokens: data.usageMetadata.totalTokenCount || 0,
-        }
-      : undefined,
-  };
+      if (response.status === 403) {
+        throw new Error('Gemini API access denied. Please check your API key.');
+      }
+
+      if (response.status >= 500) {
+        throw new Error('Gemini API server error. Please try again later.');
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+
+    if (!data.candidates || !data.candidates[0]) {
+      throw new Error('No response from Gemini API');
+    }
+
+    return {
+      content: data.candidates[0].content.parts[0].text,
+      model: config.model || aiConfig.gemini.model,
+      usage: data.usageMetadata
+        ? {
+            prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+            completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
+            total_tokens: data.usageMetadata.totalTokenCount || 0,
+          }
+        : undefined,
+    };
+  }); // Close retryApiCall
 }
 
 /**

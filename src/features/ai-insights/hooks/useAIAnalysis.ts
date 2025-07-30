@@ -156,8 +156,11 @@ function detectErrorType(
   }
 
   // Check for network errors
-  if (error?.code === 'ENOTFOUND' || error?.code === 'ECONNREFUSED') {
-    return 'network';
+  if (error && typeof error === 'object' && 'code' in error) {
+    const errorCode = (error as { code: string }).code;
+    if (errorCode === 'ENOTFOUND' || errorCode === 'ECONNREFUSED') {
+      return 'network';
+    }
   }
 
   return 'unknown';

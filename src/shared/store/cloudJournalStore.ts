@@ -83,12 +83,13 @@ export const useCloudJournalStore = create<CloudJournalState>()(
 
         try {
           const entries = await cloudStorageService.getJournalEntries();
-          set({
+          set(state => ({
             entries,
+            currentEntry: entries.length > 0 ? entries[0] : state.currentEntry,
             isLoading: false,
             lastSyncTime: new Date(),
             error: null,
-          });
+          }));
         } catch (error) {
           const errorMessage =
             error instanceof CloudStorageError

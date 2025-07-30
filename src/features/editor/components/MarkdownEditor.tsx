@@ -62,6 +62,7 @@ export function MarkdownEditor({
   // Cloud journal store (primary when authenticated)
   const {
     currentEntry: cloudCurrentEntry,
+    isLoading: cloudIsLoading,
     isCreating: cloudIsCreating,
     isUpdating: cloudIsUpdating,
     error: cloudError,
@@ -75,13 +76,25 @@ export function MarkdownEditor({
   // Use cloud data when authenticated, local data otherwise
   const currentEntry = session?.user ? cloudCurrentEntry : localCurrentEntry;
   const isLoading = session?.user
-    ? cloudIsCreating || cloudIsUpdating
+    ? cloudIsLoading || cloudIsCreating || cloudIsUpdating
     : localIsLoading;
   const error = session?.user ? cloudError : localError;
   const lastSaved = session?.user ? lastSyncTime : localLastSaved;
 
+  // Debug loading states
+  console.log('Loading states:', {
+    isAuth: !!session?.user,
+    cloudIsLoading,
+    cloudIsCreating,
+    cloudIsUpdating,
+    localIsLoading,
+    combinedIsLoading: isLoading,
+  });
+
   // Get AI analysis safely from current entry
   const currentEntryAI = getAIAnalysis(currentEntry);
+
+  // Debug logging removed to prevent infinite loops
 
   // Debug logging removed to prevent infinite loops
 
@@ -119,8 +132,15 @@ export function MarkdownEditor({
 
   // Sync content with current entry
   useEffect(() => {
+    console.log('Content sync:', {
+      hasCurrentEntry: !!currentEntry,
+      entryId: currentEntry?.id,
+      contentLength: currentEntry?.content?.length,
+      isAuth: !!session?.user,
+    });
+
     if (currentEntry) {
-      setContent(currentEntry.content);
+      setContent(currentEntry.content || '');
       setHasUnsavedChanges(false);
       // Clear previous analysis when switching entries
       clearAnalysis();

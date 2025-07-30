@@ -83,6 +83,26 @@ export function MarkdownEditor({
   // Get AI analysis safely from current entry
   const currentEntryAI = getAIAnalysis(currentEntry);
 
+  // Debug: Log sync status (temporary)
+  useEffect(() => {
+    if (session?.user) {
+      console.log('Cloud sync status:', {
+        isCreating: cloudIsCreating,
+        isUpdating: cloudIsUpdating,
+        isLoading: isLoading,
+        lastSyncTime,
+        cloudError,
+      });
+    }
+  }, [
+    session?.user,
+    cloudIsCreating,
+    cloudIsUpdating,
+    isLoading,
+    lastSyncTime,
+    cloudError,
+  ]);
+
   // Local state for editor
   const [content, setContent] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -372,7 +392,7 @@ export function MarkdownEditor({
             )}
           </button>
 
-          {/* Cloud sync status */}
+          {/* Cloud sync status - only show when there's an issue */}
           {session?.user && <OfflineIndicator className='mr-2' />}
 
           {lastSaved && (
@@ -414,16 +434,7 @@ export function MarkdownEditor({
       {(() => {
         const shouldShow =
           analysis || isAnalyzing || analysisError || !!currentEntryAI;
-        console.log('MarkdownEditor AI Analysis Display:', {
-          shouldShow,
-          hasAnalysis: !!analysis,
-          isAnalyzing,
-          hasError: !!analysisError,
-          analysisType: analysis?.type,
-          currentEntryId: currentEntry?.id,
-          currentEntryHasAI: !!currentEntryAI,
-          cachedAnalysisType: currentEntryAI?.type,
-        });
+        // Debug logging removed for production
         return shouldShow;
       })() && (
         <div className='my-6'>

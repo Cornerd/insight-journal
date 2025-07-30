@@ -44,14 +44,7 @@ export function AIAnalysisCard({
   onClearError,
   className = '',
 }: AIAnalysisCardProps) {
-  // Debug logging
-  console.log('AIAnalysisCard render:', {
-    hasAnalysis: !!analysis,
-    isLoading,
-    hasError: !!error,
-    analysisType: analysis?.type,
-    analysisModel: analysis?.model,
-  });
+  // Debug logging removed for production
   // Loading state
   if (isLoading) {
     return <AIAnalysisLoading stage='summary' className={className} />;

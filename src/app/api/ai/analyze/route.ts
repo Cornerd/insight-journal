@@ -439,12 +439,20 @@ export async function POST(
       try {
         const session = await getServerSession(authOptions);
         if (session?.user) {
-          await cloudStorageService.saveAIAnalysis(body.entryId, {
-            summary: analysisResult.summary || '',
-            emotions: analysisResult.emotions || {},
-            suggestions: analysisResult.suggestions || {},
+          // Extract analysis data for cloud storage
+          const cloudAnalysisData = {
+            summary: 'summary' in analysisResult ? analysisResult.summary : '',
+            emotions:
+              'emotions' in analysisResult ? analysisResult.emotions : {},
+            suggestions:
+              'suggestions' in analysisResult ? analysisResult.suggestions : {},
             model: analysisResult.model,
-          });
+          };
+
+          await cloudStorageService.saveAIAnalysis(
+            body.entryId,
+            cloudAnalysisData
+          );
           console.log(
             'AI analysis saved to cloud storage for entry:',
             body.entryId

@@ -6,6 +6,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { AIAnalysis } from '@/features/journal/types/journal.types';
 import { useJournalStore } from '@/shared/store/journalStore';
+import { useCloudJournalStore } from '@/shared/store/cloudJournalStore';
+import { useSession } from 'next-auth/react';
 
 // Hook state interface
 interface AIAnalysisState {
@@ -89,7 +91,7 @@ interface AnalyzeResponse {
  * Detect error type from error message or response
  */
 function detectErrorType(
-  error: any,
+  error: unknown,
   response?: Response
 ): AIAnalysisState['errorType'] {
   // Check response status codes
@@ -171,6 +173,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
 
   // Track the current request to prevent race conditions
   const currentRequestRef = useRef<AbortController | null>(null);
+  const { data: session } = useSession();
 
   // Load cached analysis when current entry changes
   useEffect(() => {
@@ -405,14 +408,35 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
           analysis,
         }));
 
-        // Save analysis result to journal entry (async, don't block UI)
+        // Save analysis result to both local and cloud storage (async, don't block UI)
         try {
+          // Save to local store first
           const { updateEntry } = useJournalStore.getState();
           await updateEntry({
             id: entryId,
             aiAnalysis: analysis,
           });
-          console.log('AI analysis saved to journal entry:', entryId);
+          console.log('AI analysis saved to local journal entry:', entryId);
+
+          // Save to cloud storage if user is authenticated
+          if (session?.user) {
+            try {
+              const { saveAnalysis } = useCloudJournalStore.getState();
+              await saveAnalysis(entryId, {
+                summary: analysis.summary,
+                emotions: analysis.emotions || {},
+                suggestions: analysis.suggestions || {},
+                model: analysis.model,
+              });
+              console.log('AI analysis saved to cloud storage:', entryId);
+            } catch (cloudError) {
+              console.warn(
+                'Failed to save AI analysis to cloud storage:',
+                cloudError
+              );
+              // Don't fail the analysis if cloud saving fails
+            }
+          }
         } catch (saveError) {
           console.warn(
             'Failed to save AI analysis to journal entry:',
@@ -450,7 +474,7 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         }
       }
     },
-    []
+    [session?.user]
   );
 
   // Clear error state

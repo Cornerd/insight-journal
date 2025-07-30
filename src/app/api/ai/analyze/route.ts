@@ -4,6 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { createChatCompletion } from '@/features/ai-insights/services/aiService';
 import { aiConfig } from '@/config/env';
 import {
@@ -17,6 +19,7 @@ import {
   isContentSuitableForAnalysis,
 } from '@/features/ai-insights/services/promptTemplates';
 import { processOpenAIError } from '@/shared/lib/api/errors';
+import { cloudStorageService } from '@/features/journal/services/cloudStorageService';
 
 // Helper functions for data normalization
 function getEmotionEmoji(emotion: string): string {
@@ -415,24 +418,52 @@ export async function POST(
       }
     }
 
+    // Prepare the analysis result
+    const analysisResult = {
+      ...analysisData,
+      generatedAt: new Date().toISOString(),
+      model: result.model,
+      tokenUsage: result.usage
+        ? {
+            prompt: result.usage.prompt_tokens,
+            completion: result.usage.completion_tokens,
+            total: result.usage.total_tokens,
+          }
+        : undefined,
+      type: analysisType,
+      version,
+    };
+
+    // Save to cloud storage if user is authenticated and entryId is provided
+    if (body.entryId) {
+      try {
+        const session = await getServerSession(authOptions);
+        if (session?.user) {
+          await cloudStorageService.saveAIAnalysis(body.entryId, {
+            summary: analysisResult.summary || '',
+            emotions: analysisResult.emotions || {},
+            suggestions: analysisResult.suggestions || {},
+            model: analysisResult.model,
+          });
+          console.log(
+            'AI analysis saved to cloud storage for entry:',
+            body.entryId
+          );
+        }
+      } catch (cloudError) {
+        console.warn(
+          'Failed to save AI analysis to cloud storage:',
+          cloudError
+        );
+        // Don't fail the request if cloud saving fails
+      }
+    }
+
     // Return successful analysis
     return NextResponse.json(
       {
         success: true,
-        analysis: {
-          ...analysisData,
-          generatedAt: new Date().toISOString(),
-          model: result.model,
-          tokenUsage: result.usage
-            ? {
-                prompt: result.usage.prompt_tokens,
-                completion: result.usage.completion_tokens,
-                total: result.usage.total_tokens,
-              }
-            : undefined,
-          type: analysisType,
-          version,
-        },
+        analysis: analysisResult,
       },
       { status: 200 }
     );

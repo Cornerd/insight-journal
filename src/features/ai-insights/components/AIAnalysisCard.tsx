@@ -9,6 +9,7 @@ import { EmotionTags } from './EmotionTags';
 import { SuggestionsList } from './SuggestionsList';
 import { AIAnalysisLoading } from '@/shared/components/feedback/LoadingSpinner';
 import { AIErrorDisplay } from './AIErrorDisplay';
+import { CompactCloudSyncIndicator } from './CloudSyncIndicator';
 
 interface AIAnalysisCardProps {
   /** AI analysis data */
@@ -102,9 +103,12 @@ export function AIAnalysisCard({
           </div>
         </div>
         <div className='flex-1 min-w-0'>
-          <h3 className='text-sm font-semibold text-blue-900 dark:text-blue-100 mb-3'>
-            AI Analysis
-          </h3>
+          <div className='flex items-center justify-between mb-3'>
+            <h3 className='text-sm font-semibold text-blue-900 dark:text-blue-100'>
+              AI Analysis
+            </h3>
+            <CompactCloudSyncIndicator />
+          </div>
 
           {/* Summary Section */}
           {analysis.summary && (

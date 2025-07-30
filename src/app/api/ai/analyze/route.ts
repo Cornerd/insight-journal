@@ -441,11 +441,19 @@ export async function POST(
         if (session?.user) {
           // Extract analysis data for cloud storage
           const cloudAnalysisData = {
-            summary: 'summary' in analysisResult ? analysisResult.summary : '',
+            summary:
+              'summary' in analysisResult &&
+              typeof analysisResult.summary === 'string'
+                ? analysisResult.summary
+                : '',
             emotions:
-              'emotions' in analysisResult ? analysisResult.emotions : {},
+              'emotions' in analysisResult && analysisResult.emotions
+                ? (analysisResult.emotions as Record<string, unknown>)
+                : {},
             suggestions:
-              'suggestions' in analysisResult ? analysisResult.suggestions : {},
+              'suggestions' in analysisResult && analysisResult.suggestions
+                ? (analysisResult.suggestions as Record<string, unknown>)
+                : {},
             model: analysisResult.model,
           };
 

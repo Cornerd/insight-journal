@@ -79,8 +79,12 @@ export function useCloudAIAnalysis() {
       try {
         await saveAnalysis(entryId, {
           summary: analysis.summary,
-          emotions: analysis.emotions || {},
-          suggestions: analysis.suggestions || {},
+          emotions: analysis.emotions
+            ? { emotions: analysis.emotions }
+            : ({} as Record<string, unknown>),
+          suggestions: analysis.suggestions
+            ? { suggestions: analysis.suggestions }
+            : ({} as Record<string, unknown>),
           model: analysis.model,
         });
         return true;

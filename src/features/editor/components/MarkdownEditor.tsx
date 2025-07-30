@@ -7,6 +7,7 @@ import '@uiw/react-markdown-preview/markdown.css';
 import { useJournalStore } from '../../../shared/store/journalStore';
 import { useCloudJournalStore } from '../../../shared/store/cloudJournalStore';
 import { useSession } from 'next-auth/react';
+import { AIAnalysis } from '../../journal/types/journal.types';
 import {
   useAIAnalysis,
   isContentSuitableForAnalysis,
@@ -17,6 +18,27 @@ import { OfflineIndicator } from '../../../components/ui/OfflineIndicator';
 
 interface MarkdownEditorProps {
   placeholder?: string;
+}
+
+// Helper function to safely access aiAnalysis from different entry types
+function getAIAnalysis(entry: unknown): AIAnalysis | null {
+  if (
+    entry &&
+    typeof entry === 'object' &&
+    entry !== null &&
+    'aiAnalysis' in entry
+  ) {
+    const aiAnalysis = (entry as { aiAnalysis: unknown }).aiAnalysis;
+    // Check if it's a valid AIAnalysis object
+    if (
+      aiAnalysis &&
+      typeof aiAnalysis === 'object' &&
+      'summary' in aiAnalysis
+    ) {
+      return aiAnalysis as AIAnalysis;
+    }
+  }
+  return null;
 }
 
 export function MarkdownEditor({
@@ -57,6 +79,9 @@ export function MarkdownEditor({
     : localIsLoading;
   const error = session?.user ? cloudError : localError;
   const lastSaved = session?.user ? lastSyncTime : localLastSaved;
+
+  // Get AI analysis safely from current entry
+  const currentEntryAI = getAIAnalysis(currentEntry);
 
   // Local state for editor
   const [content, setContent] = useState('');
@@ -388,7 +413,7 @@ export function MarkdownEditor({
       {/* AI Analysis Display */}
       {(() => {
         const shouldShow =
-          analysis || isAnalyzing || analysisError || currentEntry?.aiAnalysis;
+          analysis || isAnalyzing || analysisError || !!currentEntryAI;
         console.log('MarkdownEditor AI Analysis Display:', {
           shouldShow,
           hasAnalysis: !!analysis,
@@ -396,8 +421,8 @@ export function MarkdownEditor({
           hasError: !!analysisError,
           analysisType: analysis?.type,
           currentEntryId: currentEntry?.id,
-          currentEntryHasAI: !!currentEntry?.aiAnalysis,
-          cachedAnalysisType: currentEntry?.aiAnalysis?.type,
+          currentEntryHasAI: !!currentEntryAI,
+          cachedAnalysisType: currentEntryAI?.type,
         });
         return shouldShow;
       })() && (
@@ -421,7 +446,7 @@ export function MarkdownEditor({
             )}
           </div>
           <AIAnalysisCard
-            analysis={analysis || currentEntry?.aiAnalysis || null}
+            analysis={analysis || currentEntryAI || null}
             isLoading={isAnalyzing}
             error={analysisError}
             errorType={analysisErrorType}

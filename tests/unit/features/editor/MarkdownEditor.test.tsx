@@ -3,12 +3,20 @@ import { MarkdownEditor } from '@/features/editor/components/MarkdownEditor';
 
 // Mock the MDEditor component since it has complex dependencies
 jest.mock('@uiw/react-md-editor', () => {
-  return function MockMDEditor({ value, onChange, placeholder }: any) {
+  return function MockMDEditor({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value?: string;
+    onChange?: (value?: string) => void;
+    placeholder?: string;
+  }) {
     return (
       <textarea
-        data-testid="markdown-editor"
+        data-testid='markdown-editor'
         value={value}
-        onChange={(e) => onChange?.(e.target.value)}
+        onChange={e => onChange?.(e.target.value)}
         placeholder={placeholder}
       />
     );
@@ -34,33 +42,35 @@ describe('MarkdownEditor', () => {
 
   it('renders the markdown editor', () => {
     render(<MarkdownEditor />);
-    
+
     expect(screen.getByTestId('markdown-editor')).toBeInTheDocument();
     expect(screen.getByText('💾 Save Entry')).toBeInTheDocument();
   });
 
   it('displays the default placeholder', () => {
     render(<MarkdownEditor />);
-    
-    expect(screen.getByPlaceholderText('Start writing your thoughts...')).toBeInTheDocument();
+
+    expect(
+      screen.getByPlaceholderText('Start writing your thoughts...')
+    ).toBeInTheDocument();
   });
 
   it('displays custom placeholder when provided', () => {
     const customPlaceholder = 'Write your custom thoughts here...';
     render(<MarkdownEditor placeholder={customPlaceholder} />);
-    
+
     expect(screen.getByPlaceholderText(customPlaceholder)).toBeInTheDocument();
   });
 
   it('shows character count', () => {
     render(<MarkdownEditor />);
-    
+
     expect(screen.getByText('0 characters')).toBeInTheDocument();
   });
 
   it('displays markdown quick reference', () => {
     render(<MarkdownEditor />);
-    
+
     expect(screen.getByText('Markdown Quick Reference')).toBeInTheDocument();
     expect(screen.getByText(/\*\*Bold\*\*/)).toBeInTheDocument();
     expect(screen.getByText(/\*Italic\*/)).toBeInTheDocument();
@@ -69,7 +79,7 @@ describe('MarkdownEditor', () => {
 
   it('shows save button', () => {
     render(<MarkdownEditor />);
-    
+
     const saveButton = screen.getByRole('button', { name: /save entry/i });
     expect(saveButton).toBeInTheDocument();
     expect(saveButton).not.toBeDisabled();
@@ -77,7 +87,7 @@ describe('MarkdownEditor', () => {
 
   it('handles save button click', async () => {
     const mockSaveContent = jest.fn().mockResolvedValue(undefined);
-    
+
     // Re-mock the hook for this specific test
     jest.doMock('@/features/editor/hooks/useEditorContent', () => ({
       useEditorContent: () => ({
@@ -91,7 +101,7 @@ describe('MarkdownEditor', () => {
     }));
 
     render(<MarkdownEditor />);
-    
+
     const saveButton = screen.getByRole('button', { name: /save entry/i });
     fireEvent.click(saveButton);
 

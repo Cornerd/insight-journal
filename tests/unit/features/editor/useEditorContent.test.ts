@@ -104,7 +104,7 @@ describe('useEditorContent', () => {
 
     // Mock setTimeout to throw an error
     const originalSetTimeout = global.setTimeout;
-    global.setTimeout = jest.fn().mockImplementation((callback) => {
+    global.setTimeout = jest.fn().mockImplementation(() => {
       throw new Error('Save failed');
     });
 
@@ -113,7 +113,10 @@ describe('useEditorContent', () => {
     });
 
     expect(result.current.isLoading).toBe(false);
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to save content:', expect.any(Error));
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Failed to save content:',
+      expect.any(Error)
+    );
 
     // Restore mocks
     global.setTimeout = originalSetTimeout;

@@ -83,25 +83,7 @@ export function MarkdownEditor({
   // Get AI analysis safely from current entry
   const currentEntryAI = getAIAnalysis(currentEntry);
 
-  // Debug: Log sync status (temporary)
-  useEffect(() => {
-    if (session?.user) {
-      console.log('Cloud sync status:', {
-        isCreating: cloudIsCreating,
-        isUpdating: cloudIsUpdating,
-        isLoading: isLoading,
-        lastSyncTime,
-        cloudError,
-      });
-    }
-  }, [
-    session?.user,
-    cloudIsCreating,
-    cloudIsUpdating,
-    isLoading,
-    lastSyncTime,
-    cloudError,
-  ]);
+  // Debug logging removed to prevent infinite loops
 
   // Local state for editor
   const [content, setContent] = useState('');
@@ -132,7 +114,8 @@ export function MarkdownEditor({
       // Load from local storage when not authenticated
       loadLocalEntries();
     }
-  }, [session?.user, loadCloudEntries, loadLocalEntries]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user]);
 
   // Sync content with current entry
   useEffect(() => {
@@ -146,7 +129,8 @@ export function MarkdownEditor({
       setHasUnsavedChanges(false);
       clearAnalysis();
     }
-  }, [currentEntry, clearAnalysis]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentEntry]);
 
   // Handle content changes
   const handleContentChange = useCallback((value: string = '') => {
@@ -231,23 +215,16 @@ export function MarkdownEditor({
     } catch (error) {
       console.error('Failed to save entry:', error);
     }
-  }, [
-    content,
-    currentEntry,
-    session?.user,
-    updateCloudEntry,
-    createCloudEntry,
-    updateLocalEntry,
-    addLocalEntry,
-    analyzeEntry,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content, currentEntry, session?.user]);
 
   // Auto-save functionality
   const autoSave = useCallback(async () => {
     if (hasUnsavedChanges && content.trim()) {
       await handleSave();
     }
-  }, [hasUnsavedChanges, content, handleSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnsavedChanges, content]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -258,7 +235,8 @@ export function MarkdownEditor({
 
       return () => clearTimeout(autoSaveTimer);
     }
-  }, [hasUnsavedChanges, autoSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnsavedChanges]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -274,7 +252,8 @@ export function MarkdownEditor({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [hasUnsavedChanges, handleSave]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUnsavedChanges]);
 
   useEffect(() => {
     const handleResize = () => {

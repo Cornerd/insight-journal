@@ -427,8 +427,12 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
               const { saveAnalysis } = useCloudJournalStore.getState();
               await saveAnalysis(entryId, {
                 summary: analysis.summary,
-                emotions: analysis.emotions || {},
-                suggestions: analysis.suggestions || {},
+                emotions: analysis.emotions
+                  ? { emotions: analysis.emotions }
+                  : {},
+                suggestions: analysis.suggestions
+                  ? { suggestions: analysis.suggestions }
+                  : {},
                 model: analysis.model,
               });
               console.log('AI analysis saved to cloud storage:', entryId);

@@ -58,6 +58,7 @@ interface CloudJournalState {
   // Utility actions
   clearError: () => void;
   setOnlineStatus: (isOnline: boolean) => void;
+  setCurrentEntry: (entry: JournalEntry | null) => void;
   clearCurrentEntry: () => void;
 }
 
@@ -83,13 +84,12 @@ export const useCloudJournalStore = create<CloudJournalState>()(
 
         try {
           const entries = await cloudStorageService.getJournalEntries();
-          set(state => ({
+          set({
             entries,
-            currentEntry: entries.length > 0 ? entries[0] : state.currentEntry,
             isLoading: false,
             lastSyncTime: new Date(),
             error: null,
-          }));
+          });
         } catch (error) {
           const errorMessage =
             error instanceof CloudStorageError
@@ -330,6 +330,9 @@ export const useCloudJournalStore = create<CloudJournalState>()(
       clearError: () => set({ error: null }),
 
       setOnlineStatus: (isOnline: boolean) => set({ isOnline }),
+
+      setCurrentEntry: (entry: JournalEntry | null) =>
+        set({ currentEntry: entry }),
 
       clearCurrentEntry: () =>
         set({

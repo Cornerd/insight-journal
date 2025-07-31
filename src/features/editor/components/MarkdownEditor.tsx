@@ -5,7 +5,7 @@ import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { useJournalStore } from '../../../shared/store/journalStore';
-import { useCloudJournalStore } from '../../../shared/store/cloudJournalStore';
+// import { useCloudJournalStore } from '../../../shared/store/cloudJournalStore';
 import { useSession } from 'next-auth/react';
 import { AIAnalysis } from '../../journal/types/journal.types';
 import {
@@ -59,37 +59,28 @@ export function MarkdownEditor({
     clearError: clearLocalError,
   } = useJournalStore();
 
-  // Cloud journal store (primary when authenticated)
-  const {
-    currentEntry: cloudCurrentEntry,
-    isLoading: cloudIsLoading,
-    isCreating: cloudIsCreating,
-    isUpdating: cloudIsUpdating,
-    error: cloudError,
-    lastSyncTime,
-    createEntry: createCloudEntry,
-    updateEntry: updateCloudEntry,
-    loadEntries: loadCloudEntries,
-    clearError: clearCloudError,
-  } = useCloudJournalStore();
+  // Cloud journal store (temporarily disabled)
+  // const {
+  //   currentEntry: cloudCurrentEntry,
+  //   isLoading: cloudIsLoading,
+  //   isCreating: cloudIsCreating,
+  //   isUpdating: cloudIsUpdating,
+  //   error: cloudError,
+  //   lastSyncTime,
+  //   createEntry: createCloudEntry,
+  //   updateEntry: updateCloudEntry,
+  //   loadEntries: loadCloudEntries,
+  //   setCurrentEntry: setCloudCurrentEntry,
+  //   clearError: clearCloudError,
+  // } = useCloudJournalStore();
 
-  // Use cloud data when authenticated, local data otherwise
-  const currentEntry = session?.user ? cloudCurrentEntry : localCurrentEntry;
-  const isLoading = session?.user
-    ? cloudIsLoading || cloudIsCreating || cloudIsUpdating
-    : localIsLoading;
-  const error = session?.user ? cloudError : localError;
-  const lastSaved = session?.user ? lastSyncTime : localLastSaved;
+  // Temporarily use only local storage to fix content display issues
+  const currentEntry = localCurrentEntry;
+  const isLoading = localIsLoading;
+  const error = localError;
+  const lastSaved = localLastSaved;
 
-  // Debug loading states
-  console.log('Loading states:', {
-    isAuth: !!session?.user,
-    cloudIsLoading,
-    cloudIsCreating,
-    cloudIsUpdating,
-    localIsLoading,
-    combinedIsLoading: isLoading,
-  });
+  // Debug logging removed
 
   // Get AI analysis safely from current entry
   const currentEntryAI = getAIAnalysis(currentEntry);
@@ -118,27 +109,14 @@ export function MarkdownEditor({
     'edit'
   );
 
-  // Load entries on component mount
+  // Load entries on component mount - temporarily only local storage
   useEffect(() => {
-    if (session?.user) {
-      // Load from cloud when authenticated
-      loadCloudEntries();
-    } else {
-      // Load from local storage when not authenticated
-      loadLocalEntries();
-    }
+    loadLocalEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user]);
+  }, []);
 
   // Sync content with current entry
   useEffect(() => {
-    console.log('Content sync:', {
-      hasCurrentEntry: !!currentEntry,
-      entryId: currentEntry?.id,
-      contentLength: currentEntry?.content?.length,
-      isAuth: !!session?.user,
-    });
-
     if (currentEntry) {
       setContent(currentEntry.content || '');
       setHasUnsavedChanges(false);
@@ -165,42 +143,23 @@ export function MarkdownEditor({
     try {
       let savedEntryId: string;
 
-      if (session?.user) {
-        // Save to cloud when authenticated
-        if (currentEntry) {
-          // Update existing entry
-          const updatedEntry = await updateCloudEntry(currentEntry.id, {
-            content,
-          });
-          savedEntryId = updatedEntry?.id || currentEntry.id;
-        } else {
-          // Create new entry
-          const newEntry = await createCloudEntry('', content);
-          if (newEntry) {
-            savedEntryId = newEntry.id;
-          } else {
-            throw new Error('Failed to create cloud entry');
-          }
-        }
+      // Temporarily use only local storage
+      if (currentEntry) {
+        // Update existing entry
+        await updateLocalEntry({
+          id: currentEntry.id,
+          content,
+        });
+        savedEntryId = currentEntry.id;
       } else {
-        // Save to local storage when not authenticated
-        if (currentEntry) {
-          // Update existing entry
-          await updateLocalEntry({
-            id: currentEntry.id,
-            content,
-          });
-          savedEntryId = currentEntry.id;
+        // Create new entry
+        const result = await addLocalEntry({
+          content,
+        });
+        if (result.success) {
+          savedEntryId = result.data.id;
         } else {
-          // Create new entry
-          const result = await addLocalEntry({
-            content,
-          });
-          if (result.success) {
-            savedEntryId = result.data.id;
-          } else {
-            throw new Error(result.error.message);
-          }
+          throw new Error(result.error.message);
         }
       }
 
@@ -213,17 +172,11 @@ export function MarkdownEditor({
           const aiAnalysis = await analyzeEntry(content, savedEntryId, 'full');
           if (aiAnalysis) {
             console.log('AI analysis completed, updating entry');
-            // Update entry with AI analysis (both local and cloud will be handled by the AI analysis hook)
-            if (session?.user) {
-              // Cloud storage will be handled automatically by the AI analysis hook
-              console.log('AI analysis saved to cloud storage');
-            } else {
-              // Update local entry with AI analysis
-              await updateLocalEntry({
-                id: savedEntryId,
-                aiAnalysis,
-              });
-            }
+            // Update local entry with AI analysis
+            await updateLocalEntry({
+              id: savedEntryId,
+              aiAnalysis,
+            });
           }
         } catch (analysisError) {
           console.warn('AI analysis failed:', analysisError);

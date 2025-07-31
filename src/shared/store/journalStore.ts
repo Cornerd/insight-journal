@@ -181,10 +181,6 @@ export const useJournalStore = create<JournalStore>()(
           if (result.success) {
             set(state => {
               state.entries = result.data;
-              // Auto-select first entry if no current entry and entries exist
-              if (!state.currentEntry && result.data.length > 0) {
-                state.currentEntry = result.data[0];
-              }
               state.isLoading = false;
             });
           } else {

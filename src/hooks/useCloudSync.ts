@@ -102,10 +102,16 @@ export function useCloudSync() {
 
 // Hook for connection status indicator
 export function useConnectionStatus() {
+  const { data: session } = useSession();
   const { isOnline, error, syncStatus } = useCloudSync();
 
+  // Temporarily override status when using local storage only
+  // This prevents the sync indicator from showing when cloud storage is disabled
+  const isLocalStorageMode = !session?.user;
+  const actualSyncStatus = isLocalStorageMode ? 'synced' : syncStatus;
+
   const getStatusColor = useCallback(() => {
-    switch (syncStatus) {
+    switch (actualSyncStatus) {
       case 'synced':
         return 'green';
       case 'syncing':
@@ -121,10 +127,14 @@ export function useConnectionStatus() {
       default:
         return 'gray';
     }
-  }, [syncStatus]);
+  }, [actualSyncStatus]);
 
   const getStatusText = useCallback(() => {
-    switch (syncStatus) {
+    if (isLocalStorageMode) {
+      return 'Local storage';
+    }
+
+    switch (actualSyncStatus) {
       case 'synced':
         return 'Synced';
       case 'syncing':
@@ -142,12 +152,12 @@ export function useConnectionStatus() {
       default:
         return 'Unknown';
     }
-  }, [syncStatus]);
+  }, [actualSyncStatus, isLocalStorageMode]);
 
   return {
-    isOnline,
-    error,
-    syncStatus,
+    isOnline: isLocalStorageMode ? true : isOnline,
+    error: isLocalStorageMode ? null : error,
+    syncStatus: actualSyncStatus,
     statusColor: getStatusColor(),
     statusText: getStatusText(),
   };

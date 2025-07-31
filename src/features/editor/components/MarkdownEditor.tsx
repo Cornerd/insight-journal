@@ -372,7 +372,7 @@ export function MarkdownEditor({
             <div className='flex items-center space-x-2 text-red-600 dark:text-red-400'>
               <span className='text-sm'>❌ {error}</span>
               <button
-                onClick={session?.user ? clearCloudError : clearLocalError}
+                onClick={clearLocalError}
                 className='text-xs underline hover:no-underline cursor-pointer'
               >
                 Dismiss

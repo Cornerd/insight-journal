@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createChatCompletion } from '@/features/ai-insights/services/aiService';
 import { aiConfig } from '@/config/env';
@@ -437,7 +438,7 @@ export async function POST(
     // Save to cloud storage if user is authenticated and entryId is provided
     if (body.entryId) {
       try {
-        const session = await getServerSession(authOptions);
+        const session: Session | null = await getServerSession(authOptions);
         if (session?.user) {
           // Extract analysis data for cloud storage
           const cloudAnalysisData = {

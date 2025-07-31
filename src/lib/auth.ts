@@ -3,12 +3,11 @@
  * Authentication setup with multiple providers and Supabase adapter
  */
 
-import { NextAuthOptions } from 'next-auth';
 import GitHubProvider from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 
 // NextAuth configuration
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   // Using JWT strategy for now, will add database adapter later
   providers: [
     // GitHub OAuth provider
@@ -23,7 +22,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   jwt: {
@@ -35,7 +34,7 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: '/auth/verify-request',
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: any) {
       // Persist the OAuth access_token and user id to the token right after signin
       if (account && user) {
         token.accessToken = account.access_token;
@@ -43,7 +42,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       // Send properties to the client
       if (token) {
         session.user.id = token.userId as string;
@@ -51,7 +50,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session;
     },
-    async redirect({ url, baseUrl }) {
+    async redirect({ url, baseUrl }: any) {
       // Allows relative callback URLs
       if (url.startsWith('/')) return `${baseUrl}${url}`;
       // Allows callback URLs on the same origin
@@ -60,42 +59,17 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    async signIn({ user, account }) {
+    async signIn({ user, account }: any) {
       console.log('User signed in:', {
         user: user.email,
         provider: account?.provider,
       });
     },
-    async signOut({ session }) {
+    async signOut({ session }: any) {
       console.log('User signed out:', { user: session?.user?.email });
     },
   },
   debug: process.env.NODE_ENV === 'development',
 };
 
-// Types for NextAuth
-declare module 'next-auth' {
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string;
-      image?: string;
-    };
-    accessToken?: string;
-  }
-
-  interface User {
-    id: string;
-    email: string;
-    name?: string;
-    image?: string;
-  }
-}
-
-declare module 'next-auth/jwt' {
-  interface JWT {
-    userId?: string;
-    accessToken?: string;
-  }
-}
+// Types are defined in src/types/next-auth.d.ts

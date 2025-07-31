@@ -29,7 +29,14 @@ export function useAuth(): UseAuthReturn {
 
   const isLoading = status === 'loading';
   const isAuthenticated = !!session?.user;
-  const user = session?.user || null;
+  const user = session?.user
+    ? {
+        id: (session.user as any).id || '',
+        email: session.user.email || '',
+        name: session.user.name || undefined,
+        image: session.user.image || undefined,
+      }
+    : null;
 
   const handleSignOut = useCallback(async () => {
     await signOut({ redirect: false });

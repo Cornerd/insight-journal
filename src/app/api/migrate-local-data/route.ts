@@ -4,7 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { serverCloudStorageService } from '@/features/journal/services/serverCloudStorageService';
 
@@ -58,7 +59,7 @@ interface MigrationResult {
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions);
+    const session: Session | null = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -101,7 +102,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Check if user already has entries in cloud storage
-    let existingEntries;
+    let existingEntries: any[] = [];
     try {
       existingEntries =
         await serverCloudStorageService.getJournalEntries(userId);
@@ -195,7 +196,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 // GET endpoint to check migration status
 export async function GET(): Promise<NextResponse> {
   try {
-    const session = await getServerSession(authOptions);
+    const session: Session | null = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },

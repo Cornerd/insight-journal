@@ -14,7 +14,7 @@ import {
 } from '../../ai-insights/hooks/useAIAnalysis';
 import { AIAnalysisCard } from '../../ai-insights/components/AIAnalysisCard';
 import { AIDebugPanel } from '../../ai-insights/components/AIDebugPanel';
-import { OfflineIndicator } from '../../../components/ui/OfflineIndicator';
+// import { OfflineIndicator } from '../../../components/ui/OfflineIndicator';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -344,8 +344,8 @@ export function MarkdownEditor({
             )}
           </button>
 
-          {/* Cloud sync status - only show when there's an issue */}
-          {session?.user && <OfflineIndicator className='mr-2' />}
+          {/* Cloud sync status - temporarily disabled while using local storage only */}
+          {/* {session?.user && <OfflineIndicator className='mr-2' />} */}
 
           {lastSaved && (
             <span className='text-sm text-gray-500 dark:text-gray-400'>

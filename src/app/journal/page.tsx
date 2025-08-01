@@ -4,12 +4,41 @@ import { useState } from 'react';
 import { MarkdownEditor } from '@/features/editor/components/MarkdownEditor';
 import { JournalList } from '@/features/journal/components/JournalList';
 import { useJournalStore } from '@/shared/store/journalStore';
+import { useCloudJournal } from '@/hooks/useCloudJournal';
+import { useSession } from 'next-auth/react';
 import { JournalEntry } from '@/features/journal/types/journal.types';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
+import { DataMigration } from '@/components/DataMigration';
+import { ToastContainer } from '@/components/Toast';
+import { useToast } from '@/hooks/useToast';
 
 export default function JournalPage() {
-  const { entries, currentEntry, setCurrentEntry, deleteEntry, isLoading } =
-    useJournalStore();
+  const { data: session } = useSession();
+  const { toasts, showSuccess, showError, removeToast } = useToast();
+
+  // Local storage
+  const {
+    entries: localEntries,
+    currentEntry,
+    setCurrentEntry,
+    deleteEntry: deleteLocalEntry,
+    isLoading: localIsLoading,
+  } = useJournalStore();
+
+  // Cloud storage
+  const {
+    entries: cloudEntries,
+    isLoading: cloudIsLoading,
+    deleteEntry: deleteCloudEntry,
+    createEntry: createCloudEntry,
+    updateEntry: updateCloudEntry,
+  } = useCloudJournal();
+
+  // Use cloud entries if authenticated, otherwise local
+  const useCloud = !!session?.user;
+  const entries = useCloud ? cloudEntries : localEntries;
+  const isLoading = useCloud ? cloudIsLoading : localIsLoading;
+
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean;
     entry: JournalEntry | null;
@@ -42,8 +71,21 @@ export default function JournalPage() {
   const handleConfirmDelete = async () => {
     if (!deleteDialog.entry) return;
 
+    const entryTitle = deleteDialog.entry.title || 'Untitled Entry';
+
     try {
-      await deleteEntry(deleteDialog.entry.id);
+      if (useCloud) {
+        const success = await deleteCloudEntry(deleteDialog.entry.id);
+        if (success) {
+          showSuccess('Entry Deleted', `"${entryTitle}" has been deleted successfully.`);
+        } else {
+          showError('Delete Failed', 'Failed to delete the entry. Please try again.');
+          return; // Don't close dialog on failure
+        }
+      } else {
+        await deleteLocalEntry(deleteDialog.entry.id);
+        showSuccess('Entry Deleted', `"${entryTitle}" has been deleted successfully.`);
+      }
 
       // If we're deleting the currently selected entry, clear the selection
       if (currentEntry?.id === deleteDialog.entry.id) {
@@ -57,6 +99,7 @@ export default function JournalPage() {
       });
     } catch (error) {
       console.error('Failed to delete entry:', error);
+      showError('Delete Failed', 'An error occurred while deleting the entry.');
       // Keep dialog open on error
     }
   };
@@ -70,6 +113,9 @@ export default function JournalPage() {
 
   return (
     <div className='max-w-6xl mx-auto space-y-6'>
+      {/* Data Migration Component */}
+      <DataMigration />
+
       {/* Journal Entries List */}
       <JournalList
         entries={entries}
@@ -161,6 +207,9 @@ export default function JournalPage() {
         onCancel={handleCancelDelete}
         isLoading={isLoading}
       />
+
+      {/* Toast Notifications */}
+      <ToastContainer toasts={toasts} onClose={removeToast} />
     </div>
   );
 }

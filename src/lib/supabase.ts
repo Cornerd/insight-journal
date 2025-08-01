@@ -83,6 +83,24 @@ export interface Database {
           generated_at?: string;
         };
       };
+      journal_entries_with_analysis: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          content: string;
+          created_at: string;
+          updated_at: string;
+          analysis_id?: string;
+          summary?: string;
+          emotions?: Record<string, unknown>;
+          suggestions?: Record<string, unknown>;
+          model?: string;
+          generated_at?: string;
+        };
+        Insert: never; // Views typically don't support inserts
+        Update: never; // Views typically don't support updates
+      };
     };
     Views: {
       [_ in never]: never;

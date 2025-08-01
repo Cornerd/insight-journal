@@ -5,8 +5,9 @@ import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import { useJournalStore } from '../../../shared/store/journalStore';
-// import { useCloudJournalStore } from '../../../shared/store/cloudJournalStore';
 import { useSession } from 'next-auth/react';
+import { useToast } from '../../../hooks/useToast';
+import { getCloudIdForLocalEntry } from '../../../utils/migrationTracker';
 import { AIAnalysis } from '../../journal/types/journal.types';
 import {
   useAIAnalysis,
@@ -46,6 +47,7 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
   // Session for cloud storage
   const { data: session } = useSession();
+  const { showSuccess, showError } = useToast();
 
   // Local journal store (fallback and cache)
   const {
@@ -59,25 +61,15 @@ export function MarkdownEditor({
     clearError: clearLocalError,
   } = useJournalStore();
 
-  // Cloud journal store (temporarily disabled)
-  // const {
-  //   currentEntry: cloudCurrentEntry,
-  //   isLoading: cloudIsLoading,
-  //   isCreating: cloudIsCreating,
-  //   isUpdating: cloudIsUpdating,
-  //   error: cloudError,
-  //   lastSyncTime,
-  //   createEntry: createCloudEntry,
-  //   updateEntry: updateCloudEntry,
-  //   loadEntries: loadCloudEntries,
-  //   setCurrentEntry: setCloudCurrentEntry,
-  //   clearError: clearCloudError,
-  // } = useCloudJournalStore();
+  // Note: We'll get cloud data from props instead of calling useCloudJournal here
+  // to avoid duplicate API calls. The parent component should manage cloud data.
 
-  // Temporarily use only local storage to fix content display issues
+  // For now, use only local storage to avoid duplicate API calls
+  // Cloud functionality will be handled by the parent component
   const currentEntry = localCurrentEntry;
   const isLoading = localIsLoading;
-  const error = localError;
+  // Only show storage errors that are not related to AI analysis
+  const error = localError && !localError.includes('Journal entry with ID') ? localError : null;
   const lastSaved = localLastSaved;
 
   // Debug logging removed
@@ -109,11 +101,30 @@ export function MarkdownEditor({
     'edit'
   );
 
-  // Load entries on component mount - temporarily only local storage
+  // Load entries on component mount
   useEffect(() => {
     loadLocalEntries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Clear error when content changes
+  useEffect(() => {
+    if (error) {
+      clearLocalError();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [content]);
+
+  // Clear AI analysis related errors periodically
+  useEffect(() => {
+    if (localError && localError.includes('Journal entry with ID')) {
+      const timer = setTimeout(() => {
+        clearLocalError();
+      }, 5000); // Clear after 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [localError, clearLocalError]);
 
   // Sync content with current entry
   useEffect(() => {
@@ -143,7 +154,7 @@ export function MarkdownEditor({
     try {
       let savedEntryId: string;
 
-      // Temporarily use only local storage
+      // Use local storage only (cloud sync will be handled by parent component)
       if (currentEntry) {
         // Update existing entry
         await updateLocalEntry({
@@ -165,18 +176,36 @@ export function MarkdownEditor({
 
       setHasUnsavedChanges(false);
 
+      // Show success notification
+      const title = content.split('\n')[0].substring(0, 50) || 'Untitled';
+      showSuccess('Entry Saved', `"${title}" has been saved successfully.`);
+
       // Trigger AI analysis if content is suitable
       if (isContentSuitableForAnalysis(content)) {
         try {
-          console.log('Triggering AI analysis for entry:', savedEntryId);
-          const aiAnalysis = await analyzeEntry(content, savedEntryId, 'full');
+          // Clear any existing storage errors related to AI analysis
+          if (localError && localError.includes('Journal entry with ID')) {
+            clearLocalError();
+          }
+
+          // For cloud users, try to get the cloud ID for AI analysis
+          let analysisEntryId = savedEntryId;
+          if (session?.user) {
+            const cloudId = getCloudIdForLocalEntry(savedEntryId);
+            if (cloudId) {
+              analysisEntryId = cloudId;
+              console.log('Using cloud ID for AI analysis:', cloudId);
+            } else {
+              console.log('No cloud ID found, using local ID:', savedEntryId);
+            }
+          }
+
+          console.log('Triggering AI analysis for entry:', analysisEntryId);
+          const aiAnalysis = await analyzeEntry(content, analysisEntryId, 'full');
           if (aiAnalysis) {
-            console.log('AI analysis completed, updating entry');
-            // Update local entry with AI analysis
-            await updateLocalEntry({
-              id: savedEntryId,
-              aiAnalysis,
-            });
+            console.log('AI analysis completed successfully');
+            // Note: We don't update local entry here anymore,
+            // as it's handled in the analyzeEntry function
           }
         } catch (analysisError) {
           console.warn('AI analysis failed:', analysisError);
@@ -187,6 +216,7 @@ export function MarkdownEditor({
       }
     } catch (error) {
       console.error('Failed to save entry:', error);
+      showError('Save Failed', 'Failed to save the entry. Please try again.');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [content, currentEntry, session?.user]);
@@ -204,7 +234,7 @@ export function MarkdownEditor({
     if (hasUnsavedChanges) {
       const autoSaveTimer = setTimeout(() => {
         autoSave();
-      }, 3000); // Auto-save after 3 seconds of inactivity
+      }, 30000); // Auto-save after 30 seconds of inactivity
 
       return () => clearTimeout(autoSaveTimer);
     }
@@ -344,12 +374,9 @@ export function MarkdownEditor({
             )}
           </button>
 
-          {/* Cloud sync status - temporarily disabled while using local storage only */}
-          {/* {session?.user && <OfflineIndicator className='mr-2' />} */}
-
           {lastSaved && (
             <span className='text-sm text-gray-500 dark:text-gray-400'>
-              {session?.user ? 'Last synced' : 'Last saved'}:{' '}
+              Last saved:{' '}
               {(() => {
                 try {
                   const date =
@@ -399,7 +426,17 @@ export function MarkdownEditor({
                 onClick={() => {
                   // Force re-analysis by clearing cache first
                   clearAnalysis();
-                  analyzeEntry(content, currentEntry.id, 'full');
+
+                  // Use cloud ID if available for authenticated users
+                  let analysisEntryId = currentEntry.id;
+                  if (session?.user) {
+                    const cloudId = getCloudIdForLocalEntry(currentEntry.id);
+                    if (cloudId) {
+                      analysisEntryId = cloudId;
+                    }
+                  }
+
+                  analyzeEntry(content, analysisEntryId, 'full');
                 }}
                 className='px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 cursor-pointer'
                 title='Re-analyze with current content'
@@ -415,7 +452,15 @@ export function MarkdownEditor({
             errorType={analysisErrorType}
             onRetry={() => {
               if (currentEntry) {
-                analyzeEntry(content, currentEntry.id, 'full');
+                // Use cloud ID if available for authenticated users
+                let analysisEntryId = currentEntry.id;
+                if (session?.user) {
+                  const cloudId = getCloudIdForLocalEntry(currentEntry.id);
+                  if (cloudId) {
+                    analysisEntryId = cloudId;
+                  }
+                }
+                analyzeEntry(content, analysisEntryId, 'full');
               }
             }}
             onClearError={clearAnalysisError}

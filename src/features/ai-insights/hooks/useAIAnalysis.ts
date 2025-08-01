@@ -8,6 +8,7 @@ import { AIAnalysis } from '@/features/journal/types/journal.types';
 import { useJournalStore } from '@/shared/store/journalStore';
 import { useCloudJournalStore } from '@/shared/store/cloudJournalStore';
 import { useSession } from 'next-auth/react';
+import { getLocalIdForCloudEntry } from '@/utils/migrationTracker';
 
 // Hook state interface
 interface AIAnalysisState {
@@ -258,7 +259,17 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
       const { entries } = useJournalStore.getState();
 
       // Check if we already have cached analysis for this entry
-      const existingEntry = entries.find(e => e.id === entryId);
+      // If entryId is a cloud ID, try to find the corresponding local entry
+      let existingEntry = entries.find(e => e.id === entryId);
+
+      if (!existingEntry && session?.user) {
+        // Try to find by mapped local ID
+        const mappedLocalId = getLocalIdForCloudEntry(entryId);
+        if (mappedLocalId) {
+          existingEntry = entries.find(e => e.id === mappedLocalId);
+          console.log('Found existing entry by mapped local ID:', mappedLocalId);
+        }
+      }
       if (existingEntry?.aiAnalysis) {
         // Check if content has changed significantly since last analysis
         const currentContent = content.trim().toLowerCase();
@@ -412,45 +423,77 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         }));
 
         // Save analysis result to both local and cloud storage (async, don't block UI)
-        try {
-          // Save to local store first
-          const { updateEntry } = useJournalStore.getState();
-          await updateEntry({
-            id: entryId,
-            aiAnalysis: analysis,
-          });
-          console.log('AI analysis saved to local journal entry:', entryId);
+        // Important: Do this in the background without affecting the analysis result display
+        setTimeout(async () => {
+          try {
+            // Determine if we're dealing with a cloud ID or local ID
+            const isCloudId = session?.user && entryId.length > 20; // Cloud IDs are typically longer
+            let localEntryId = entryId;
 
-          // Save to cloud storage if user is authenticated
-          if (session?.user) {
-            try {
-              const { saveAnalysis } = useCloudJournalStore.getState();
-              await saveAnalysis(entryId, {
-                summary: analysis.summary,
-                emotions: analysis.emotions
-                  ? { emotions: analysis.emotions }
-                  : {},
-                suggestions: analysis.suggestions
-                  ? { suggestions: analysis.suggestions }
-                  : {},
-                model: analysis.model,
-              });
-              console.log('AI analysis saved to cloud storage:', entryId);
-            } catch (cloudError) {
-              console.warn(
-                'Failed to save AI analysis to cloud storage:',
-                cloudError
-              );
-              // Don't fail the analysis if cloud saving fails
+            if (isCloudId) {
+              // If this is a cloud ID, try to find the corresponding local ID
+              const mappedLocalId = getLocalIdForCloudEntry(entryId);
+              if (mappedLocalId) {
+                localEntryId = mappedLocalId;
+                console.log('Using mapped local ID for analysis save:', mappedLocalId);
+              } else {
+                console.warn('No local ID mapping found for cloud ID:', entryId);
+                // Skip local save if we can't find the mapping
+                localEntryId = '';
+              }
             }
+
+            // Save to local store if we have a local ID
+            if (localEntryId) {
+              try {
+                const { updateEntry } = useJournalStore.getState();
+                const result = await updateEntry({
+                  id: localEntryId,
+                  aiAnalysis: analysis,
+                });
+
+                if (result.success) {
+                  console.log('AI analysis saved to local journal entry:', localEntryId);
+                } else {
+                  console.warn('Failed to save AI analysis to local entry:', result.error?.message);
+                }
+              } catch (localSaveError) {
+                console.warn('Error saving AI analysis to local entry:', localSaveError);
+                // Don't propagate this error to the user
+              }
+            }
+
+            // Save to cloud storage if user is authenticated (using the original entryId which should be cloud ID)
+            if (session?.user && isCloudId) {
+              try {
+                const { saveAnalysis } = useCloudJournalStore.getState();
+                await saveAnalysis(entryId, {
+                  summary: analysis.summary,
+                  emotions: analysis.emotions
+                    ? { emotions: analysis.emotions }
+                    : {},
+                  suggestions: analysis.suggestions
+                    ? { suggestions: analysis.suggestions }
+                    : {},
+                  model: analysis.model,
+                });
+                console.log('AI analysis saved to cloud storage:', entryId);
+              } catch (cloudError) {
+                console.warn(
+                  'Failed to save AI analysis to cloud storage:',
+                  cloudError
+                );
+                // Don't fail the analysis if cloud saving fails
+              }
+            }
+          } catch (saveError) {
+            console.warn(
+              'Failed to save AI analysis to journal entry:',
+              saveError
+            );
+            // Don't affect the UI state even if saving fails
           }
-        } catch (saveError) {
-          console.warn(
-            'Failed to save AI analysis to journal entry:',
-            saveError
-          );
-          // Don't fail the analysis if saving fails
-        }
+        }, 100); // Small delay to ensure UI update happens first
 
         return analysis;
       } catch (error) {

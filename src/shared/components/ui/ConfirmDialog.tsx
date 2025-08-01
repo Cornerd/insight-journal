@@ -74,16 +74,16 @@ export function ConfirmDialog({
   if (!isOpen) return null;
 
   const confirmButtonStyles = {
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-    warning: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500',
+    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:focus:ring-red-400 shadow-sm',
+    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm',
+    warning: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 dark:focus:ring-amber-400 shadow-sm',
   };
 
   return (
     <div className='fixed inset-0 z-50 overflow-y-auto'>
       {/* Backdrop */}
       <div
-        className='fixed inset-0 bg-black bg-opacity-50 transition-opacity'
+        className='fixed inset-0 bg-gray-900/50 dark:bg-black/60 transition-opacity backdrop-blur-sm'
         onClick={onCancel}
         aria-hidden='true'
       />
@@ -93,9 +93,10 @@ export function ConfirmDialog({
         <div
           ref={dialogRef}
           className='
-            relative w-full max-w-md transform overflow-hidden rounded-lg 
-            bg-white dark:bg-gray-800 shadow-xl transition-all
-            border border-gray-200 dark:border-gray-700
+            relative w-full max-w-md transform overflow-hidden rounded-lg
+            bg-white dark:bg-gray-800 shadow-2xl transition-all
+            border border-gray-200 dark:border-gray-600
+            ring-1 ring-black/5 dark:ring-white/10
           '
           role='dialog'
           aria-modal='true'
@@ -185,19 +186,19 @@ export function ConfirmDialog({
           </div>
 
           {/* Actions */}
-          <div className='px-6 py-4 bg-gray-50 dark:bg-gray-750 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 space-y-3 space-y-reverse sm:space-y-0'>
+          <div className='px-6 py-4 bg-gray-50 dark:bg-gray-700/50 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3 space-y-3 space-y-reverse sm:space-y-0'>
             <button
               type='button'
               onClick={onCancel}
               disabled={isLoading}
               className='
                 w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md
-                text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700
-                border border-gray-300 dark:border-gray-600
-                hover:bg-gray-50 dark:hover:bg-gray-600
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500
+                text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600
+                border border-gray-300 dark:border-gray-500
+                hover:bg-gray-50 dark:hover:bg-gray-500
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-gray-400
                 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
-                transition-colors duration-200
+                transition-all duration-200 shadow-sm
               '
             >
               {cancelText}
@@ -210,9 +211,9 @@ export function ConfirmDialog({
               disabled={isLoading}
               className={`
                 w-full sm:w-auto px-4 py-2 text-sm font-medium rounded-md
-                focus:outline-none focus:ring-2 focus:ring-offset-2
+                focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800
                 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer
-                transition-colors duration-200
+                transition-all duration-200
                 ${confirmButtonStyles[confirmVariant]}
               `}
             >

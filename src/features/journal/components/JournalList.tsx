@@ -145,7 +145,7 @@ export function JournalList({
               p-1 rounded-md text-gray-500 dark:text-gray-400
               hover:text-gray-700 dark:hover:text-gray-200
               hover:bg-gray-100 dark:hover:bg-gray-700
-              cursor-pointer transition-colors duration-200
+              transition-colors duration-200 cursor-pointer
             '
             title={isCollapsed ? 'Expand list' : 'Collapse list'}
           >

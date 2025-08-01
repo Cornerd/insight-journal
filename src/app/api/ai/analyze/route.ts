@@ -458,9 +458,15 @@ export async function POST(
             model: analysisResult.model,
           };
 
-          await cloudStorageService.saveAIAnalysis(
+          // Try to use the NextAuth cloud storage service instead
+          const { nextAuthCloudStorageService } = await import('@/features/journal/services/nextAuthCloudStorageService');
+
+          await nextAuthCloudStorageService.createAIAnalysis(
             body.entryId,
-            cloudAnalysisData
+            cloudAnalysisData.summary,
+            cloudAnalysisData.emotions,
+            cloudAnalysisData.suggestions,
+            cloudAnalysisData.model
           );
           console.log(
             'AI analysis saved to cloud storage for entry:',

@@ -48,17 +48,37 @@ function generatePreview(content: string, maxLength: number = 120): string {
 /**
  * Format date for display
  */
-function formatEntryDate(date: Date): { relative: string; absolute: string } {
-  const now = new Date();
-  const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+function formatEntryDate(dateInput: Date | string): { relative: string; absolute: string } {
+  try {
+    // Handle both Date objects and string dates from cloud storage
+    const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
 
-  return {
-    relative:
-      diffInHours < 24
-        ? formatDistanceToNow(date, { addSuffix: true })
-        : format(date, 'MMM d, yyyy'),
-    absolute: format(date, "EEEE, MMMM d, yyyy 'at' h:mm a"),
-  };
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateInput);
+      return {
+        relative: 'Invalid date',
+        absolute: 'Invalid date',
+      };
+    }
+
+    const now = new Date();
+    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+
+    return {
+      relative:
+        diffInHours < 24
+          ? formatDistanceToNow(date, { addSuffix: true })
+          : format(date, 'MMM d, yyyy'),
+      absolute: format(date, "EEEE, MMMM d, yyyy 'at' h:mm a"),
+    };
+  } catch (error) {
+    console.error('Error formatting date:', error, dateInput);
+    return {
+      relative: 'Unknown date',
+      absolute: 'Unknown date',
+    };
+  }
 }
 
 export function JournalCard({

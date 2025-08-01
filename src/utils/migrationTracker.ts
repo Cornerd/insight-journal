@@ -1,0 +1,147 @@
+/**
+ * Migration Tracker Utility
+ * Tracks which local entries have been migrated to avoid duplicates
+ */
+
+const MIGRATION_TRACKER_KEY = 'insight-journal-migrated-entries';
+
+interface MigratedEntry {
+  localId: string;
+  cloudId: string;
+  migratedAt: string;
+  contentHash: string; // Hash of content for verification
+}
+
+// Simple hash function for content
+function simpleHash(str: string): string {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return hash.toString();
+}
+
+// Get migrated entries from localStorage
+export function getMigratedEntries(): MigratedEntry[] {
+  try {
+    const stored = localStorage.getItem(MIGRATION_TRACKER_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Error reading migrated entries:', error);
+    return [];
+  }
+}
+
+// Mark an entry as migrated
+export function markEntryAsMigrated(
+  localId: string,
+  cloudId: string,
+  content: string
+): void {
+  try {
+    const migrated = getMigratedEntries();
+    const contentHash = simpleHash(content.trim());
+    
+    // Remove any existing entry with the same local ID
+    const filtered = migrated.filter(entry => entry.localId !== localId);
+    
+    // Add the new migration record
+    filtered.push({
+      localId,
+      cloudId,
+      migratedAt: new Date().toISOString(),
+      contentHash,
+    });
+    
+    localStorage.setItem(MIGRATION_TRACKER_KEY, JSON.stringify(filtered));
+  } catch (error) {
+    console.error('Error marking entry as migrated:', error);
+  }
+}
+
+// Check if an entry has been migrated
+export function isEntryMigrated(localId: string, content: string): boolean {
+  try {
+    const migrated = getMigratedEntries();
+    const contentHash = simpleHash(content.trim());
+    
+    return migrated.some(entry => 
+      entry.localId === localId && entry.contentHash === contentHash
+    );
+  } catch (error) {
+    console.error('Error checking if entry is migrated:', error);
+    return false;
+  }
+}
+
+// Check if content has been migrated (regardless of local ID)
+export function isContentMigrated(content: string): boolean {
+  try {
+    const migrated = getMigratedEntries();
+    const contentHash = simpleHash(content.trim());
+    
+    return migrated.some(entry => entry.contentHash === contentHash);
+  } catch (error) {
+    console.error('Error checking if content is migrated:', error);
+    return false;
+  }
+}
+
+// Clear migration tracker (for testing or reset)
+export function clearMigrationTracker(): void {
+  try {
+    localStorage.removeItem(MIGRATION_TRACKER_KEY);
+  } catch (error) {
+    console.error('Error clearing migration tracker:', error);
+  }
+}
+
+// Get cloud ID for a local entry
+export function getCloudIdForLocalEntry(localId: string): string | null {
+  try {
+    const migrated = getMigratedEntries();
+    const entry = migrated.find(entry => entry.localId === localId);
+    return entry ? entry.cloudId : null;
+  } catch (error) {
+    console.error('Error getting cloud ID for local entry:', error);
+    return null;
+  }
+}
+
+// Get local ID for a cloud entry
+export function getLocalIdForCloudEntry(cloudId: string): string | null {
+  try {
+    const migrated = getMigratedEntries();
+    const entry = migrated.find(entry => entry.cloudId === cloudId);
+    return entry ? entry.localId : null;
+  } catch (error) {
+    console.error('Error getting local ID for cloud entry:', error);
+    return null;
+  }
+}
+
+// Get migration statistics
+export function getMigrationStats(): {
+  totalMigrated: number;
+  lastMigrationDate: Date | null;
+} {
+  try {
+    const migrated = getMigratedEntries();
+    const lastMigrationDate = migrated.length > 0
+      ? new Date(Math.max(...migrated.map(entry => new Date(entry.migratedAt).getTime())))
+      : null;
+
+    return {
+      totalMigrated: migrated.length,
+      lastMigrationDate,
+    };
+  } catch (error) {
+    console.error('Error getting migration stats:', error);
+    return {
+      totalMigrated: 0,
+      lastMigrationDate: null,
+    };
+  }
+}

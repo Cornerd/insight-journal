@@ -30,8 +30,6 @@ export default function JournalPage() {
     entries: cloudEntries,
     isLoading: cloudIsLoading,
     deleteEntry: deleteCloudEntry,
-    createEntry: createCloudEntry,
-    updateEntry: updateCloudEntry,
   } = useCloudJournal();
 
   // Use cloud entries if authenticated, otherwise local

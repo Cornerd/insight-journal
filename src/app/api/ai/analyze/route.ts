@@ -20,7 +20,6 @@ import {
   isContentSuitableForAnalysis,
 } from '@/features/ai-insights/services/promptTemplates';
 import { processOpenAIError } from '@/shared/lib/api/errors';
-import { cloudStorageService } from '@/features/journal/services/cloudStorageService';
 
 // Helper functions for data normalization
 function getEmotionEmoji(emotion: string): string {

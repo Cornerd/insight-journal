@@ -11,7 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 export async function GET() {
   try {
     console.log('=== DEBUG SESSION START ===');
-    
+
     // Get session
     const session = await getServerSession(authOptions);
     console.log('Raw session:', JSON.stringify(session, null, 2));
@@ -41,7 +41,8 @@ export async function GET() {
         .insert({
           user_id: userId,
           title: 'Debug Test Entry',
-          content: 'This is a debug test entry created at ' + new Date().toISOString(),
+          content:
+            'This is a debug test entry created at ' + new Date().toISOString(),
         })
         .select()
         .single();
@@ -51,10 +52,7 @@ export async function GET() {
 
       // Clean up the test entry if it was created
       if (insertData) {
-        await supabase
-          .from('journal_entries')
-          .delete()
-          .eq('id', insertData.id);
+        await supabase.from('journal_entries').delete().eq('id', insertData.id);
         console.log('Cleaned up test entry');
       }
     }

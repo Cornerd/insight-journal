@@ -129,7 +129,8 @@ export async function GET() {
       test_results: {
         entry_created: !!createdEntry,
         entry_read: !!readEntry,
-        user_id_match: createdEntry.user_id === (session.userId || session.user.id),
+        user_id_match:
+          createdEntry.user_id === (session.userId || session.user.id),
       },
       timestamp: new Date().toISOString(),
     });

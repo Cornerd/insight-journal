@@ -9,7 +9,7 @@ import { nextAuthCloudStorageService } from '@/features/journal/services/nextAut
 export async function GET() {
   try {
     const entries = await nextAuthCloudStorageService.getJournalEntries();
-    
+
     return NextResponse.json({
       success: true,
       data: entries,
@@ -40,7 +40,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const entry = await nextAuthCloudStorageService.createJournalEntry(title, content);
+    const entry = await nextAuthCloudStorageService.createJournalEntry(
+      title,
+      content
+    );
 
     return NextResponse.json({
       success: true,

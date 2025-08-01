@@ -56,34 +56,44 @@ export const authOptions = {
           // This ensures the same user gets the same UUID across sessions
           const crypto = await import('crypto');
           const userIdentifier = `${account.provider}:${account.providerAccountId}`;
-          const hash = crypto.createHash('sha256').update(userIdentifier).digest('hex');
+          const hash = crypto
+            .createHash('sha256')
+            .update(userIdentifier)
+            .digest('hex');
           const uuid = [
             hash.substring(0, 8),
             hash.substring(8, 12),
             hash.substring(12, 16),
             hash.substring(16, 20),
-            hash.substring(20, 32)
+            hash.substring(20, 32),
           ].join('-');
 
-          console.log('Generated UUID for user:', uuid, 'from identifier:', userIdentifier);
+          console.log(
+            'Generated UUID for user:',
+            uuid,
+            'from identifier:',
+            userIdentifier
+          );
 
           // Check if user exists in auth.users
-          const { data: existingUser, error: fetchError } = await supabase.auth.admin.getUserById(uuid);
+          const { data: existingUser, error: fetchError } =
+            await supabase.auth.admin.getUserById(uuid);
 
           if (fetchError || !existingUser.user) {
             console.log('Creating new user in Supabase auth...');
             // Create user in Supabase auth with our generated UUID
-            const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-              id: uuid,
-              email: user.email,
-              user_metadata: {
-                name: user.name,
-                avatar_url: user.image,
-                provider: account.provider,
-                provider_account_id: account.providerAccountId,
-              },
-              email_confirm: true,
-            });
+            const { data: newUser, error: createError } =
+              await supabase.auth.admin.createUser({
+                id: uuid,
+                email: user.email,
+                user_metadata: {
+                  name: user.name,
+                  avatar_url: user.image,
+                  provider: account.provider,
+                  provider_account_id: account.providerAccountId,
+                },
+                email_confirm: true,
+              });
 
             if (!createError && newUser.user) {
               console.log('Successfully created user:', newUser.user.id);

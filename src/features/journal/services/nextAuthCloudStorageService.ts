@@ -22,8 +22,10 @@ const supabaseAdmin = createClient<Database>(
 
 // Type definitions
 type JournalEntry = Database['public']['Tables']['journal_entries']['Row'];
-type JournalEntryInsert = Database['public']['Tables']['journal_entries']['Insert'];
-type JournalEntryUpdate = Database['public']['Tables']['journal_entries']['Update'];
+type JournalEntryInsert =
+  Database['public']['Tables']['journal_entries']['Insert'];
+type JournalEntryUpdate =
+  Database['public']['Tables']['journal_entries']['Update'];
 type AIAnalysis = Database['public']['Tables']['ai_analysis']['Row'];
 type AIAnalysisInsert = Database['public']['Tables']['ai_analysis']['Insert'];
 

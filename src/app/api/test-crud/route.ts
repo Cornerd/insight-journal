@@ -19,7 +19,8 @@ export async function GET() {
     const createData = {
       user_id: testUserId,
       title: 'Test Entry',
-      content: 'This is a test journal entry created at ' + new Date().toISOString(),
+      content:
+        'This is a test journal entry created at ' + new Date().toISOString(),
     };
 
     const { data: createdEntry, error: createError } = await supabase

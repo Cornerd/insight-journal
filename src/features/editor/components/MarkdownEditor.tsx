@@ -69,7 +69,10 @@ export function MarkdownEditor({
   const currentEntry = localCurrentEntry;
   const isLoading = localIsLoading;
   // Only show storage errors that are not related to AI analysis
-  const error = localError && !localError.includes('Journal entry with ID') ? localError : null;
+  const error =
+    localError && !localError.includes('Journal entry with ID')
+      ? localError
+      : null;
   const lastSaved = localLastSaved;
 
   // Debug logging removed
@@ -201,7 +204,11 @@ export function MarkdownEditor({
           }
 
           console.log('Triggering AI analysis for entry:', analysisEntryId);
-          const aiAnalysis = await analyzeEntry(content, analysisEntryId, 'full');
+          const aiAnalysis = await analyzeEntry(
+            content,
+            analysisEntryId,
+            'full'
+          );
           if (aiAnalysis) {
             console.log('AI analysis completed successfully');
             // Note: We don't update local entry here anymore,

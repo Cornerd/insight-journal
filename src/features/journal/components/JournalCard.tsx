@@ -48,7 +48,10 @@ function generatePreview(content: string, maxLength: number = 120): string {
 /**
  * Format date for display
  */
-function formatEntryDate(dateInput: Date | string): { relative: string; absolute: string } {
+function formatEntryDate(dateInput: Date | string): {
+  relative: string;
+  absolute: string;
+} {
   try {
     // Handle both Date objects and string dates from cloud storage
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);

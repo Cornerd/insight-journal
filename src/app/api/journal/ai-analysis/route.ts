@@ -8,13 +8,15 @@ import { nextAuthCloudStorageService } from '@/features/journal/services/nextAut
 
 export async function POST(request: Request) {
   try {
-    const { entryId, summary, emotions, suggestions, model } = await request.json();
+    const { entryId, summary, emotions, suggestions, model } =
+      await request.json();
 
     if (!entryId || !summary || !emotions || !suggestions || !model) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'entryId, summary, emotions, suggestions, and model are required' 
+        {
+          success: false,
+          error:
+            'entryId, summary, emotions, suggestions, and model are required',
         },
         { status: 400 }
       );

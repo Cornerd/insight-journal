@@ -17,7 +17,7 @@ function simpleHash(str: string): string {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
   return hash.toString();
@@ -43,10 +43,10 @@ export function markEntryAsMigrated(
   try {
     const migrated = getMigratedEntries();
     const contentHash = simpleHash(content.trim());
-    
+
     // Remove any existing entry with the same local ID
     const filtered = migrated.filter(entry => entry.localId !== localId);
-    
+
     // Add the new migration record
     filtered.push({
       localId,
@@ -54,7 +54,7 @@ export function markEntryAsMigrated(
       migratedAt: new Date().toISOString(),
       contentHash,
     });
-    
+
     localStorage.setItem(MIGRATION_TRACKER_KEY, JSON.stringify(filtered));
   } catch (error) {
     console.error('Error marking entry as migrated:', error);
@@ -66,9 +66,9 @@ export function isEntryMigrated(localId: string, content: string): boolean {
   try {
     const migrated = getMigratedEntries();
     const contentHash = simpleHash(content.trim());
-    
-    return migrated.some(entry => 
-      entry.localId === localId && entry.contentHash === contentHash
+
+    return migrated.some(
+      entry => entry.localId === localId && entry.contentHash === contentHash
     );
   } catch (error) {
     console.error('Error checking if entry is migrated:', error);
@@ -81,7 +81,7 @@ export function isContentMigrated(content: string): boolean {
   try {
     const migrated = getMigratedEntries();
     const contentHash = simpleHash(content.trim());
-    
+
     return migrated.some(entry => entry.contentHash === contentHash);
   } catch (error) {
     console.error('Error checking if content is migrated:', error);
@@ -129,9 +129,14 @@ export function getMigrationStats(): {
 } {
   try {
     const migrated = getMigratedEntries();
-    const lastMigrationDate = migrated.length > 0
-      ? new Date(Math.max(...migrated.map(entry => new Date(entry.migratedAt).getTime())))
-      : null;
+    const lastMigrationDate =
+      migrated.length > 0
+        ? new Date(
+            Math.max(
+              ...migrated.map(entry => new Date(entry.migratedAt).getTime())
+            )
+          )
+        : null;
 
     return {
       totalMigrated: migrated.length,

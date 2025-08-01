@@ -77,14 +77,23 @@ export default function JournalPage() {
       if (useCloud) {
         const success = await deleteCloudEntry(deleteDialog.entry.id);
         if (success) {
-          showSuccess('Entry Deleted', `"${entryTitle}" has been deleted successfully.`);
+          showSuccess(
+            'Entry Deleted',
+            `"${entryTitle}" has been deleted successfully.`
+          );
         } else {
-          showError('Delete Failed', 'Failed to delete the entry. Please try again.');
+          showError(
+            'Delete Failed',
+            'Failed to delete the entry. Please try again.'
+          );
           return; // Don't close dialog on failure
         }
       } else {
         await deleteLocalEntry(deleteDialog.entry.id);
-        showSuccess('Entry Deleted', `"${entryTitle}" has been deleted successfully.`);
+        showSuccess(
+          'Entry Deleted',
+          `"${entryTitle}" has been deleted successfully.`
+        );
       }
 
       // If we're deleting the currently selected entry, clear the selection

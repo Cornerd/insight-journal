@@ -459,7 +459,9 @@ export async function POST(
           };
 
           // Try to use the NextAuth cloud storage service instead
-          const { nextAuthCloudStorageService } = await import('@/features/journal/services/nextAuthCloudStorageService');
+          const { nextAuthCloudStorageService } = await import(
+            '@/features/journal/services/nextAuthCloudStorageService'
+          );
 
           await nextAuthCloudStorageService.createAIAnalysis(
             body.entryId,

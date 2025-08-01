@@ -74,9 +74,12 @@ export function ConfirmDialog({
   if (!isOpen) return null;
 
   const confirmButtonStyles = {
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:focus:ring-red-400 shadow-sm',
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm',
-    warning: 'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 dark:focus:ring-amber-400 shadow-sm',
+    danger:
+      'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500 dark:focus:ring-red-400 shadow-sm',
+    primary:
+      'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm',
+    warning:
+      'bg-amber-600 text-white hover:bg-amber-700 focus:ring-amber-500 dark:focus:ring-amber-400 shadow-sm',
   };
 
   return (

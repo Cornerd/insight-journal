@@ -8,8 +8,9 @@ import { nextAuthCloudStorageService } from '@/features/journal/services/nextAut
 
 export async function GET() {
   try {
-    const entries = await nextAuthCloudStorageService.getJournalEntriesWithAnalysis();
-    
+    const entries =
+      await nextAuthCloudStorageService.getJournalEntriesWithAnalysis();
+
     return NextResponse.json({
       success: true,
       data: entries,

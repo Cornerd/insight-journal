@@ -13,21 +13,24 @@ export async function GET() {
     // Test 1: Create a journal entry
     const createdEntry = await nextAuthCloudStorageService.createJournalEntry(
       'Test Journal Entry',
-      'This is a test journal entry created through the NextAuth cloud storage service at ' + new Date().toISOString()
+      'This is a test journal entry created through the NextAuth cloud storage service at ' +
+        new Date().toISOString()
     );
 
     // Test 2: Get all journal entries
     const allEntries = await nextAuthCloudStorageService.getJournalEntries();
 
     // Test 3: Get the specific entry
-    const specificEntry = await nextAuthCloudStorageService.getJournalEntry(createdEntry.id);
+    const specificEntry = await nextAuthCloudStorageService.getJournalEntry(
+      createdEntry.id
+    );
 
     // Test 4: Update the entry
     const updatedEntry = await nextAuthCloudStorageService.updateJournalEntry(
       createdEntry.id,
       {
         title: 'Updated Test Journal Entry',
-        content: 'This entry has been updated at ' + new Date().toISOString()
+        content: 'This entry has been updated at ' + new Date().toISOString(),
       }
     );
 
@@ -36,18 +39,24 @@ export async function GET() {
       createdEntry.id,
       'This is a test summary of the journal entry.',
       { joy: 0.7, neutral: 0.3, excitement: 0.5 },
-      { categories: ['reflection', 'gratitude'], actions: ['continue journaling'] },
+      {
+        categories: ['reflection', 'gratitude'],
+        actions: ['continue journaling'],
+      },
       'test-model-v1'
     );
 
     // Test 6: Get entries with analysis
-    const entriesWithAnalysis = await nextAuthCloudStorageService.getJournalEntriesWithAnalysis();
+    const entriesWithAnalysis =
+      await nextAuthCloudStorageService.getJournalEntriesWithAnalysis();
 
     // Test 7: Clean up - Delete the test entry (this will cascade delete the analysis)
     await nextAuthCloudStorageService.deleteJournalEntry(createdEntry.id);
 
     // Test 8: Verify deletion
-    const deletedEntry = await nextAuthCloudStorageService.getJournalEntry(createdEntry.id);
+    const deletedEntry = await nextAuthCloudStorageService.getJournalEntry(
+      createdEntry.id
+    );
 
     return NextResponse.json({
       success: true,
@@ -101,7 +110,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const entry = await nextAuthCloudStorageService.createJournalEntry(title, content);
+    const entry = await nextAuthCloudStorageService.createJournalEntry(
+      title,
+      content
+    );
 
     return NextResponse.json({
       success: true,

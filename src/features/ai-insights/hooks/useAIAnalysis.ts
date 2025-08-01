@@ -267,7 +267,10 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
         const mappedLocalId = getLocalIdForCloudEntry(entryId);
         if (mappedLocalId) {
           existingEntry = entries.find(e => e.id === mappedLocalId);
-          console.log('Found existing entry by mapped local ID:', mappedLocalId);
+          console.log(
+            'Found existing entry by mapped local ID:',
+            mappedLocalId
+          );
         }
       }
       if (existingEntry?.aiAnalysis) {
@@ -435,9 +438,15 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
               const mappedLocalId = getLocalIdForCloudEntry(entryId);
               if (mappedLocalId) {
                 localEntryId = mappedLocalId;
-                console.log('Using mapped local ID for analysis save:', mappedLocalId);
+                console.log(
+                  'Using mapped local ID for analysis save:',
+                  mappedLocalId
+                );
               } else {
-                console.warn('No local ID mapping found for cloud ID:', entryId);
+                console.warn(
+                  'No local ID mapping found for cloud ID:',
+                  entryId
+                );
                 // Skip local save if we can't find the mapping
                 localEntryId = '';
               }
@@ -453,12 +462,21 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
                 });
 
                 if (result.success) {
-                  console.log('AI analysis saved to local journal entry:', localEntryId);
+                  console.log(
+                    'AI analysis saved to local journal entry:',
+                    localEntryId
+                  );
                 } else {
-                  console.warn('Failed to save AI analysis to local entry:', result.error?.message);
+                  console.warn(
+                    'Failed to save AI analysis to local entry:',
+                    result.error?.message
+                  );
                 }
               } catch (localSaveError) {
-                console.warn('Error saving AI analysis to local entry:', localSaveError);
+                console.warn(
+                  'Error saving AI analysis to local entry:',
+                  localSaveError
+                );
                 // Don't propagate this error to the user
               }
             }

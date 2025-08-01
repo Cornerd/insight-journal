@@ -63,7 +63,10 @@ export async function GET() {
     }
 
     // Test authentication (if user is logged in)
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     return NextResponse.json({
       success: true,

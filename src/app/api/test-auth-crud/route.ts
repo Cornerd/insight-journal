@@ -31,7 +31,8 @@ export async function GET() {
     const createData = {
       user_id: testUserId,
       title: 'Test Entry with Service Role',
-      content: 'This is a test journal entry created at ' + new Date().toISOString(),
+      content:
+        'This is a test journal entry created at ' + new Date().toISOString(),
     };
 
     const { data: createdEntry, error: createError } = await supabaseAdmin
@@ -143,8 +144,14 @@ export async function GET() {
       .eq('id', createdEntry.id);
 
     // Test 7: Clean up - Delete the test data
-    await supabaseAdmin.from('ai_analysis').delete().eq('id', createdAnalysis.id);
-    await supabaseAdmin.from('journal_entries').delete().eq('id', createdEntry.id);
+    await supabaseAdmin
+      .from('ai_analysis')
+      .delete()
+      .eq('id', createdAnalysis.id);
+    await supabaseAdmin
+      .from('journal_entries')
+      .delete()
+      .eq('id', createdEntry.id);
 
     return NextResponse.json({
       success: true,

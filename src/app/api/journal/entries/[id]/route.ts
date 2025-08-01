@@ -12,7 +12,7 @@ export async function GET(
 ) {
   try {
     const entry = await nextAuthCloudStorageService.getJournalEntry(params.id);
-    
+
     if (!entry) {
       return NextResponse.json(
         { success: false, error: 'Journal entry not found' },
@@ -44,7 +44,10 @@ export async function PUT(
   try {
     const updates = await request.json();
 
-    const entry = await nextAuthCloudStorageService.updateJournalEntry(params.id, updates);
+    const entry = await nextAuthCloudStorageService.updateJournalEntry(
+      params.id,
+      updates
+    );
 
     return NextResponse.json({
       success: true,

@@ -7,6 +7,8 @@
 
 import { format, formatDistanceToNow } from 'date-fns';
 import { JournalEntry } from '../types/journal.types';
+import { AIAnalysisStatus } from '@/components/AIAnalysisStatus';
+import { useAIAnalysis } from '@/features/ai-insights/hooks/useAIAnalysis';
 
 interface JournalCardProps {
   entry: JournalEntry;
@@ -96,6 +98,18 @@ export function JournalCard({
   const isUpdated =
     new Date(entry.updatedAt).getTime() !== new Date(entry.createdAt).getTime();
 
+  // AI Analysis functionality
+  const { analyzeEntry, isLoading: isAnalyzing } = useAIAnalysis();
+
+  const handleAnalyze = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    try {
+      await analyzeEntry(entry.content, entry.id, 'full');
+    } catch (error) {
+      console.error('Failed to analyze entry:', error);
+    }
+  };
+
   return (
     <div
       onClick={onClick}
@@ -111,6 +125,16 @@ export function JournalCard({
       `}
       title={dateInfo.absolute}
     >
+      {/* AI Analysis Status */}
+      <div className='absolute top-3 left-3'>
+        <AIAnalysisStatus
+          entry={entry}
+          size="sm"
+          onAnalyze={!entry.aiAnalysis ? handleAnalyze : undefined}
+          isAnalyzing={isAnalyzing}
+        />
+      </div>
+
       {/* Delete button - positioned absolutely */}
       {onDelete && (
         <button

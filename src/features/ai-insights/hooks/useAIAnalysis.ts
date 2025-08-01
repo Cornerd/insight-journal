@@ -314,9 +314,9 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
               isLoading: false,
               error: null,
               errorType: null,
-              analysis: existingEntry.aiAnalysis || null,
+              analysis: existingEntry?.aiAnalysis || null,
             }));
-            return existingEntry.aiAnalysis || null;
+            return existingEntry?.aiAnalysis || null;
           }
         } else {
           console.log('Content changed significantly - will re-analyze');

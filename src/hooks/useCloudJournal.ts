@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { JournalEntry } from '@/features/journal/types/journal.types';
 
 // Types
 interface CloudJournalEntry {
@@ -39,7 +40,12 @@ interface AIAnalysis {
   generated_at: string;
 }
 
-interface JournalEntryWithAnalysis extends JournalEntry {
+interface JournalEntryWithAnalysis {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
   analysis_id?: string;
   summary?: string;
   emotions?: Record<string, unknown>;

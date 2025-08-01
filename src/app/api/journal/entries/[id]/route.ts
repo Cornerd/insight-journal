@@ -8,10 +8,11 @@ import { nextAuthCloudStorageService } from '@/features/journal/services/nextAut
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const entry = await nextAuthCloudStorageService.getJournalEntry(params.id);
+    const { id } = await params;
+    const entry = await nextAuthCloudStorageService.getJournalEntry(id);
 
     if (!entry) {
       return NextResponse.json(
@@ -39,13 +40,14 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const updates = await request.json();
 
     const entry = await nextAuthCloudStorageService.updateJournalEntry(
-      params.id,
+      id,
       updates
     );
 
@@ -69,10 +71,11 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await nextAuthCloudStorageService.deleteJournalEntry(params.id);
+    const { id } = await params;
+    await nextAuthCloudStorageService.deleteJournalEntry(id);
 
     return NextResponse.json({
       success: true,

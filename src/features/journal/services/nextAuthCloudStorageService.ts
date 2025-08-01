@@ -275,9 +275,7 @@ export class NextAuthCloudStorageService {
     model: string
   ): Promise<AIAnalysis> {
     try {
-      const userId = await this.getCurrentUserId();
-
-      // Verify the entry belongs to the user
+      // Verify the entry belongs to the user (this method internally checks user auth)
       const entry = await this.getJournalEntry(entryId);
       if (!entry) {
         throw new NextAuthCloudStorageError(

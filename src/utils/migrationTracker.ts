@@ -122,6 +122,63 @@ export function getLocalIdForCloudEntry(cloudId: string): string | null {
   }
 }
 
+// Get list of local IDs that have been migrated
+export function getMigratedLocalIds(): string[] {
+  try {
+    const migrated = getMigratedEntries();
+    return migrated.map(entry => entry.localId);
+  } catch (error) {
+    console.error('Error getting migrated local IDs:', error);
+    return [];
+  }
+}
+
+// Check if we can safely clean up local data
+export function canCleanupLocalData(): {
+  canCleanup: boolean;
+  migratedCount: number;
+  reason?: string;
+} {
+  try {
+    const migrated = getMigratedEntries();
+
+    if (migrated.length === 0) {
+      return {
+        canCleanup: false,
+        migratedCount: 0,
+        reason: 'No migrated entries found',
+      };
+    }
+
+    // Check if migrations are recent (within last 24 hours)
+    const now = new Date().getTime();
+    const recentMigrations = migrated.filter(entry => {
+      const migrationTime = new Date(entry.migratedAt).getTime();
+      return now - migrationTime < 24 * 60 * 60 * 1000; // 24 hours
+    });
+
+    if (recentMigrations.length === 0) {
+      return {
+        canCleanup: false,
+        migratedCount: migrated.length,
+        reason: 'No recent migrations found. Please re-sync to ensure data safety.',
+      };
+    }
+
+    return {
+      canCleanup: true,
+      migratedCount: migrated.length,
+    };
+  } catch (error) {
+    console.error('Error checking cleanup eligibility:', error);
+    return {
+      canCleanup: false,
+      migratedCount: 0,
+      reason: 'Error checking migration status',
+    };
+  }
+}
+
 // Get migration statistics
 export function getMigrationStats(): {
   totalMigrated: number;

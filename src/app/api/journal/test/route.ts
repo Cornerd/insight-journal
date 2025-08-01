@@ -92,7 +92,10 @@ export async function GET() {
         success: false,
         error: 'Journal CRUD test failed',
         details: error instanceof Error ? error.message : 'Unknown error',
-        error_code: error && typeof error === 'object' && 'code' in error ? (error as { code: string }).code : undefined,
+        error_code:
+          error && typeof error === 'object' && 'code' in error
+            ? (error as { code: string }).code
+            : undefined,
       },
       { status: 500 }
     );

@@ -102,7 +102,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     };
 
     // Check if user already has entries in cloud storage
-    let existingEntries: Array<{ id: string; title: string; content: string; created_at: string }> = [];
+    let existingEntries: Array<{
+      id: string;
+      title: string;
+      content: string;
+      created_at: string;
+    }> = [];
     try {
       existingEntries =
         await serverCloudStorageService.getJournalEntries(userId);

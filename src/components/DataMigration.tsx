@@ -176,7 +176,9 @@ export function DataMigration() {
                             className='bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                             title={`Clean up ${migratedCount} migrated local entries to free up space`}
                           >
-                            {isCleaningUp ? 'Cleaning...' : `🧹 Clean Local Data (${migratedCount})`}
+                            {isCleaningUp
+                              ? 'Cleaning...'
+                              : `🧹 Clean Local Data (${migratedCount})`}
                           </button>
                           <span className='text-xs text-gray-600'>
                             Free up local storage space
@@ -346,7 +348,9 @@ export function DataMigration() {
                     className='bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
                     title={`Clean up ${migratedCount} migrated local entries to free up space`}
                   >
-                    {isCleaningUp ? 'Cleaning...' : `Clean Local (${migratedCount})`}
+                    {isCleaningUp
+                      ? 'Cleaning...'
+                      : `Clean Local (${migratedCount})`}
                   </button>
                 )}
 

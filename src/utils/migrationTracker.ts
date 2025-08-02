@@ -161,7 +161,8 @@ export function canCleanupLocalData(): {
       return {
         canCleanup: false,
         migratedCount: migrated.length,
-        reason: 'No recent migrations found. Please re-sync to ensure data safety.',
+        reason:
+          'No recent migrations found. Please re-sync to ensure data safety.',
       };
     }
 

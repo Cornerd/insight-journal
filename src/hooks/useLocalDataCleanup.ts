@@ -2,10 +2,10 @@
 
 import { useState, useCallback } from 'react';
 import { useJournalStore } from '@/shared/store/journalStore';
-import { 
-  getMigratedLocalIds, 
+import {
+  getMigratedLocalIds,
   canCleanupLocalData,
-  clearMigrationTracker 
+  clearMigrationTracker,
 } from '@/utils/migrationTracker';
 
 interface CleanupResult {
@@ -31,7 +31,9 @@ export function useLocalDataCleanup(): UseLocalDataCleanupReturn {
   const [canCleanup, setCanCleanup] = useState(false);
   const [migratedCount, setMigratedCount] = useState(0);
   const [cleanupReason, setCleanupReason] = useState<string>();
-  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(
+    null
+  );
 
   const { entries, deleteEntry } = useJournalStore();
 
@@ -50,7 +52,7 @@ export function useLocalDataCleanup(): UseLocalDataCleanupReturn {
 
     try {
       const migratedLocalIds = getMigratedLocalIds();
-      
+
       if (migratedLocalIds.length === 0) {
         setCleanupResult({
           success: false,
@@ -62,7 +64,7 @@ export function useLocalDataCleanup(): UseLocalDataCleanupReturn {
       }
 
       // Find entries that exist locally and have been migrated
-      const entriesToDelete = entries.filter(entry => 
+      const entriesToDelete = entries.filter(entry =>
         migratedLocalIds.includes(entry.id)
       );
 
@@ -86,10 +88,14 @@ export function useLocalDataCleanup(): UseLocalDataCleanupReturn {
           if (result.success) {
             deletedCount++;
           } else {
-            errors.push(`Failed to delete "${entry.title || 'Untitled'}": ${result.error?.message}`);
+            errors.push(
+              `Failed to delete "${entry.title || 'Untitled'}": ${result.error?.message}`
+            );
           }
         } catch (error) {
-          errors.push(`Error deleting "${entry.title || 'Untitled'}": ${error instanceof Error ? error.message : 'Unknown error'}`);
+          errors.push(
+            `Error deleting "${entry.title || 'Untitled'}": ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
         }
       }
 
@@ -97,19 +103,21 @@ export function useLocalDataCleanup(): UseLocalDataCleanupReturn {
         success: errors.length === 0,
         deletedCount,
         errors,
-        message: errors.length === 0 
-          ? `Successfully cleaned up ${deletedCount} migrated entries`
-          : `Cleaned up ${deletedCount} entries with ${errors.length} errors`,
+        message:
+          errors.length === 0
+            ? `Successfully cleaned up ${deletedCount} migrated entries`
+            : `Cleaned up ${deletedCount} entries with ${errors.length} errors`,
       });
 
       // Update cleanup eligibility after deletion
       checkCleanupEligibility();
-
     } catch (error) {
       setCleanupResult({
         success: false,
         deletedCount: 0,
-        errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+        errors: [
+          error instanceof Error ? error.message : 'Unknown error occurred',
+        ],
         message: 'Cleanup failed',
       });
     } finally {

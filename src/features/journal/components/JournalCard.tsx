@@ -114,10 +114,7 @@ export function JournalCard({
     >
       {/* AI Analysis Status */}
       <div className='absolute top-3 left-3'>
-        <AIAnalysisStatus
-          entry={entry}
-          size="sm"
-        />
+        <AIAnalysisStatus entry={entry} size='sm' />
       </div>
 
       {/* Delete button - positioned absolutely */}

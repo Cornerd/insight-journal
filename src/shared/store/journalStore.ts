@@ -42,7 +42,8 @@ export const useJournalStore = create<JournalStore>()(
 
           if (result.success) {
             set(state => {
-              state.entries.push(result.data);
+              // Add new entry to the beginning of the array (newest first)
+              state.entries.unshift(result.data);
               state.currentEntry = result.data;
               state.lastSaved = new Date();
               state.isLoading = false;

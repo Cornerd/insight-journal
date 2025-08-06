@@ -466,6 +466,15 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
                     'AI analysis saved to local journal entry:',
                     localEntryId
                   );
+
+                  // 🔄 Refresh local journal data to ensure UI shows updated analysis status
+                  try {
+                    const { loadEntries } = useJournalStore.getState();
+                    await loadEntries();
+                    console.log('🔄 Local journal data refreshed after AI analysis');
+                  } catch (refreshError) {
+                    console.warn('Failed to refresh local journal data:', refreshError);
+                  }
                 } else {
                   console.warn(
                     'Failed to save AI analysis to local entry:',
@@ -496,6 +505,15 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
                   model: analysis.model,
                 });
                 console.log('AI analysis saved to cloud storage:', entryId);
+
+                // 🔄 Refresh cloud journal data to ensure UI shows updated analysis status
+                try {
+                  const { loadEntries } = useCloudJournalStore.getState();
+                  await loadEntries();
+                  console.log('🔄 Cloud journal data refreshed after AI analysis');
+                } catch (refreshError) {
+                  console.warn('Failed to refresh cloud journal data:', refreshError);
+                }
               } catch (cloudError) {
                 console.warn(
                   'Failed to save AI analysis to cloud storage:',

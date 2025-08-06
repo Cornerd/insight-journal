@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useJournalStore } from '@/shared/store/journalStore';
 import { useCloudJournal } from '@/hooks/useCloudJournal';
 import { useDataMigration } from '@/hooks/useDataMigration';
-import { useLocalDataCleanup } from '@/hooks/useLocalDataCleanup';
+
 import {
   isEntryMigrated,
   isContentMigrated,
@@ -26,16 +26,7 @@ export function DataMigration() {
     resetMigration,
   } = useDataMigration();
 
-  const {
-    isLoading: isCleaningUp,
-    canCleanup,
-    migratedCount,
-    cleanupReason,
-    cleanupResult,
-    checkCleanupEligibility,
-    cleanupMigratedData,
-    clearCleanupResult,
-  } = useLocalDataCleanup();
+
 
   // Don't show if not authenticated
   if (!session?.user) {
@@ -94,19 +85,13 @@ export function DataMigration() {
   // Get migration statistics
   const migrationStats = getMigrationStats();
 
-  // Check cleanup eligibility when component mounts or when migration completes
-  React.useEffect(() => {
-    if (migrationStats.totalMigrated > 0) {
-      checkCleanupEligibility();
-    }
-  }, [migrationStats.totalMigrated, checkCleanupEligibility]);
 
-  // Don't show if no migration needed and no result to show and no cleanup available
+
+  // Don't show if no migration needed and no result to show
   if (
     entriesToMigrate.length === 0 &&
     !migrationResult &&
-    migrationStats.totalMigrated === 0 &&
-    !canCleanup
+    migrationStats.totalMigrated === 0
   ) {
     return null;
   }
@@ -167,30 +152,7 @@ export function DataMigration() {
                         Migrate {entriesToMigrate.length} Entries to Cloud
                       </button>
 
-                      {/* Show cleanup option if there are migrated entries */}
-                      {canCleanup && !cleanupReason && (
-                        <div className='flex items-center space-x-2'>
-                          <button
-                            onClick={cleanupMigratedData}
-                            disabled={isCleaningUp}
-                            className='bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                            title={`Clean up ${migratedCount} migrated local entries to free up space`}
-                          >
-                            {isCleaningUp
-                              ? 'Cleaning...'
-                              : `🧹 Clean Local Data (${migratedCount})`}
-                          </button>
-                          <span className='text-xs text-gray-600'>
-                            Free up local storage space
-                          </span>
-                        </div>
-                      )}
 
-                      {cleanupReason && (
-                        <p className='text-xs text-yellow-600'>
-                          ⚠️ {cleanupReason}
-                        </p>
-                      )}
                     </div>
                   ) : (
                     <div className='space-y-2'>
@@ -211,60 +173,7 @@ export function DataMigration() {
             </div>
           )}
 
-          {/* Cleanup Result */}
-          {cleanupResult && (
-            <div className='space-y-3'>
-              <div
-                className={`p-3 rounded-md ${
-                  cleanupResult.success
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-red-50 border border-red-200'
-                }`}
-              >
-                <h4
-                  className={`text-sm font-medium ${
-                    cleanupResult.success ? 'text-green-800' : 'text-red-800'
-                  }`}
-                >
-                  {cleanupResult.success
-                    ? '🧹 Cleanup Completed'
-                    : '❌ Cleanup Failed'}
-                </h4>
 
-                <div
-                  className={`text-xs mt-2 space-y-1 ${
-                    cleanupResult.success ? 'text-green-700' : 'text-red-700'
-                  }`}
-                >
-                  <p>{cleanupResult.message}</p>
-                  {cleanupResult.deletedCount > 0 && (
-                    <p>Deleted: {cleanupResult.deletedCount} local entries</p>
-                  )}
-                  {cleanupResult.errors.length > 0 && (
-                    <details className='mt-2'>
-                      <summary className='text-xs text-red-600 cursor-pointer'>
-                        Show errors ({cleanupResult.errors.length})
-                      </summary>
-                      <div className='mt-1 text-xs text-red-600 space-y-1'>
-                        {cleanupResult.errors.map((error, index) => (
-                          <p key={index}>• {error}</p>
-                        ))}
-                      </div>
-                    </details>
-                  )}
-                </div>
-
-                <div className='flex space-x-2 mt-3'>
-                  <button
-                    onClick={clearCleanupResult}
-                    className='bg-gray-600 text-white px-3 py-1 rounded text-xs hover:bg-gray-700 transition-colors cursor-pointer'
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
           {migrationResult && (
             <div className='space-y-3'>
@@ -340,19 +249,7 @@ export function DataMigration() {
                   </button>
                 )}
 
-                {/* Show cleanup option after successful migration */}
-                {migrationResult.success && canCleanup && (
-                  <button
-                    onClick={cleanupMigratedData}
-                    disabled={isCleaningUp}
-                    className='bg-orange-600 text-white px-3 py-1 rounded text-xs hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
-                    title={`Clean up ${migratedCount} migrated local entries to free up space`}
-                  >
-                    {isCleaningUp
-                      ? 'Cleaning...'
-                      : `Clean Local (${migratedCount})`}
-                  </button>
-                )}
+
 
                 {/* Development mode: Reset migration tracker */}
                 {process.env.NODE_ENV === 'development' && (

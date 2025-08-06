@@ -17,6 +17,8 @@ interface EmotionTagsProps {
   className?: string;
   /** Show intensity values */
   showIntensity?: boolean;
+  /** Show simplified sentiment view (积极/消极/中性) */
+  simplified?: boolean;
 }
 
 /**
@@ -92,6 +94,7 @@ export function EmotionTags({
   confidence,
   className = '',
   showIntensity = false,
+  simplified = false,
 }: EmotionTagsProps) {
   if (!emotions || emotions.length === 0) {
     return null;
@@ -101,6 +104,41 @@ export function EmotionTags({
   const sortedEmotions = [...emotions].sort(
     (a, b) => b.intensity - a.intensity
   );
+
+  // Simplified mode - show only sentiment classification
+  if (simplified && sentiment) {
+    const colors = getSentimentColors(sentiment);
+    const sentimentLabels = {
+      positive: '积极',
+      negative: '消极',
+      neutral: '中性',
+      mixed: '复合'
+    };
+
+    return (
+      <div className={`${className}`}>
+        <div className='flex items-center space-x-3'>
+          <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+            情绪倾向:
+          </span>
+          <div
+            className={`
+              inline-flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium
+              ${colors.bg} ${colors.text} border ${colors.border || 'border-gray-200'}
+            `}
+          >
+            <span className='text-lg'>{colors.icon}</span>
+            <span>{sentimentLabels[sentiment]}</span>
+            {confidence && (
+              <span className='text-xs opacity-75'>
+                ({Math.round(confidence * 100)}%)
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`space-y-4 ${className}`}>

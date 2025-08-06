@@ -1,7 +1,7 @@
 1. # Product Requirements Document: Insight Journal – AI-Powered Daily Reflection Web App
 
-   **Document Version:** 0.3
-   **Date:** 2025-08-04
+   **Document Version:** 0.2
+   **Date:** 2025-07-29
    **Author:** PM Agent
 
    ---
@@ -25,7 +25,6 @@
    | :--------- | :------ | :------------ | :----- |
    | 2025-07-20 | 0.1     | Initial Draft | PM     |
    | 2025-07-29 | 0.2     | AI Analysis Enhancements | PM     |
-   | 2025-08-04 | 0.3     | Cloud Storage, Authentication & Data Migration Features | PM     |
 
    ---
 
@@ -42,12 +41,6 @@
    * **FR7: Smart Caching System:** The system shall implement intelligent caching to avoid redundant AI analysis requests, detecting content changes and reusing existing analysis when appropriate.
    * **FR8: Manual Re-analysis:** Users must be able to manually trigger re-analysis of their journal entries to get updated insights based on current content.
    * **FR9: Error Recovery:** The system shall provide comprehensive error handling with user-friendly messages and recovery options for AI service failures.
-   * **FR10: User Authentication:** The system shall support OAuth authentication via GitHub and Google providers using NextAuth.js for secure user identification.
-   * **FR11: Cloud Data Storage:** The system shall provide cloud-based data persistence using Supabase PostgreSQL database for journal entries and AI analysis results.
-   * **FR12: Data Migration:** The system shall automatically detect and migrate existing localStorage data to cloud storage upon user authentication, preserving all content and AI analysis.
-   * **FR13: AI Analysis Status Visualization:** The system shall display clear visual indicators on journal entries showing whether AI analysis has been completed or is pending.
-   * **FR14: Local Data Cleanup:** The system shall provide users with the ability to safely remove local data after successful cloud migration to free up storage space.
-   * **FR15: Offline-Online Synchronization:** The system shall support both offline writing (localStorage) and online cloud storage, with seamless data synchronization capabilities.
 
    ### 2.2 Non-Functional Requirements (NFR)
 
@@ -62,11 +55,6 @@
    * **NFR9: Token Optimization:** The application should minimize OpenAI API token usage through intelligent caching and content change detection to reduce costs.
    * **NFR10: Real-time State Management:** The application should provide real-time feedback on AI analysis status with proper loading states and progress indicators.
    * **NFR11: Data Persistence:** AI analysis results should be automatically saved and persist across browser sessions without user intervention.
-   * **NFR12: Authentication Security:** OAuth authentication should use secure token handling with deterministic UUID generation for consistent user identification across sessions.
-   * **NFR13: Data Migration Safety:** Data migration processes should include conflict detection, duplicate prevention, and rollback capabilities to ensure data integrity.
-   * **NFR14: Cloud Storage Performance:** Cloud storage operations should be optimized with proper indexing, caching, and connection pooling for responsive user experience.
-   * **NFR15: Cross-Device Compatibility:** The application should maintain data consistency and synchronization across multiple devices when users are authenticated.
-   * **NFR16: Migration Tracking:** The system should maintain detailed logs of data migration operations for debugging and user transparency.
 
    ---
 
@@ -88,9 +76,6 @@
 
    * **Journaling Page (`/journal`):** The primary interface for users to write their daily notes, trigger AI analysis, and view the AI-generated summary, emotion analysis, and suggestions.
    * **Home Page (`/`):** An introductory page with a brief overview of the app's benefits and a clear Call to Action (CTA) to start journaling.
-   * **Authentication Pages (`/auth/signin`, `/auth/signup`):** Secure OAuth login/signup interfaces supporting GitHub and Google authentication providers.
-   * **Migration Page (`/migrate`):** Data migration interface allowing users to transfer localStorage data to cloud storage with progress tracking and conflict resolution.
-   * **Test Pages (`/test-login`, `/test-cloud-journal`):** Development and testing interfaces for authentication and cloud storage functionality verification.
 
    ### Accessibility: None
    *Assumption: For MVP, basic accessibility best practices will be followed, but no specific WCAG compliance level (AA or AAA) is targeted.*
@@ -128,9 +113,7 @@
    * **Animations:** `framer-motion` is suggested for handling animations, particularly during AI analysis loading states, to enhance user experience.
    * **Deployment Target:** Vercel is a strong candidate for deployment given the Next.js choice and ease of continuous deployment.
    * **Data Persistence:** `localStorage` will be the primary method for data storage in the MVP, with a clear understanding that this is a temporary solution for local data.
-   * **Cloud Data Persistence:** Supabase PostgreSQL database implemented for production cloud storage with user authentication and data synchronization.
-   * **Authentication System:** NextAuth.js implemented with OAuth providers (GitHub, Google) for secure user authentication and session management.
-   * **Data Migration System:** Automated migration tools implemented to transfer localStorage data to cloud storage with conflict detection and resolution.
+   * **Future Data Persistence:** Firebase/Supabase are noted as potential solutions for future cloud-based user authentication and data storage.
    * **Markdown Editor:** A suitable Markdown editor library will be integrated to support rich text/Markdown input for notes.
    * **Charting Library (Future):** For future data analysis features, `echarts`, `Recharts`, `Chart.js`, or `D3.js` are noted as potential charting libraries.
    * **Internationalization (Future):** `i18n` is noted for future multi-language support.
@@ -182,16 +165,6 @@
            * User-specific journal access control and privacy
            * Multi-device synchronization and conflict resolution
            * Account management and user preferences
-
-   * **Epic 4: Data Migration & Synchronization**
-       * **Goal:** Provide seamless data migration capabilities and synchronization between local and cloud storage, ensuring users never lose their journal data when transitioning to cloud storage.
-       * **Includes:**
-           * Automatic detection of localStorage data
-           * Smart migration with duplicate prevention
-           * Migration progress tracking and error handling
-           * Local data cleanup after successful migration
-           * AI analysis status visualization and management
-           * Conflict resolution for overlapping data
 
    ---
 

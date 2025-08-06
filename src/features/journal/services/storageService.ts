@@ -307,7 +307,8 @@ export const storageService = {
 
     const updatedData: StorageData = {
       ...loadResult.data,
-      entries: [...loadResult.data.entries, newEntry],
+      // Add new entry to the beginning (newest first)
+      entries: [newEntry, ...loadResult.data.entries],
       metadata: {
         ...loadResult.data.metadata,
         lastSync: now,

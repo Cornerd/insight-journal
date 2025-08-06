@@ -156,31 +156,86 @@ export function MarkdownEditor({
 
     try {
       let savedEntryId: string;
+      const title = content.split('\n')[0].substring(0, 50) || 'Untitled';
 
-      // Use local storage only (cloud sync will be handled by parent component)
-      if (currentEntry) {
-        // Update existing entry
-        await updateLocalEntry({
-          id: currentEntry.id,
-          content,
-        });
-        savedEntryId = currentEntry.id;
-      } else {
-        // Create new entry
-        const result = await addLocalEntry({
-          content,
-        });
-        if (result.success) {
-          savedEntryId = result.data.id;
+      // 🔄 Save to appropriate storage based on authentication status
+      if (session?.user) {
+        // For authenticated users, save to cloud storage
+        if (currentEntry) {
+          // Update existing entry - TODO: Implement cloud update
+          await updateLocalEntry({
+            id: currentEntry.id,
+            content,
+          });
+          savedEntryId = currentEntry.id;
         } else {
-          throw new Error(result.error.message);
+          // Create new entry in cloud storage using API
+          try {
+            const response = await fetch('/api/journal/entries', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title, content }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(data.error || 'Failed to create cloud entry');
+            }
+
+            savedEntryId = data.data.id;
+            console.log('✅ New entry saved to cloud storage:', savedEntryId);
+
+            // 🔄 Trigger cloud data refresh to update the UI
+            setTimeout(async () => {
+              try {
+                const { useCloudJournalStore } = await import('@/shared/store/cloudJournalStore');
+                const cloudStore = useCloudJournalStore.getState();
+                await cloudStore.loadEntries();
+                console.log('🔄 Cloud journal data refreshed after new entry creation');
+              } catch (refreshError) {
+                console.warn('Failed to refresh cloud journal data:', refreshError);
+              }
+            }, 100);
+
+          } catch (cloudError) {
+            console.warn('Failed to save to cloud, falling back to local storage:', cloudError);
+            // Fallback to local storage if cloud save fails
+            const result = await addLocalEntry({ content });
+            if (result.success) {
+              savedEntryId = result.data.id;
+            } else {
+              throw new Error(result.error.message);
+            }
+          }
+        }
+      } else {
+        // For non-authenticated users, use local storage
+        if (currentEntry) {
+          // Update existing entry
+          await updateLocalEntry({
+            id: currentEntry.id,
+            content,
+          });
+          savedEntryId = currentEntry.id;
+        } else {
+          // Create new entry
+          const result = await addLocalEntry({
+            content,
+          });
+          if (result.success) {
+            savedEntryId = result.data.id;
+          } else {
+            throw new Error(result.error.message);
+          }
         }
       }
 
       setHasUnsavedChanges(false);
 
       // Show success notification
-      const title = content.split('\n')[0].substring(0, 50) || 'Untitled';
       showSuccess('Entry Saved', `"${title}" has been saved successfully.`);
 
       // Trigger AI analysis if content is suitable
@@ -191,28 +246,18 @@ export function MarkdownEditor({
             clearLocalError();
           }
 
-          // For cloud users, try to get the cloud ID for AI analysis
-          let analysisEntryId = savedEntryId;
-          if (session?.user) {
-            const cloudId = getCloudIdForLocalEntry(savedEntryId);
-            if (cloudId) {
-              analysisEntryId = cloudId;
-              console.log('Using cloud ID for AI analysis:', cloudId);
-            } else {
-              console.log('No cloud ID found, using local ID:', savedEntryId);
-            }
-          }
-
-          console.log('Triggering AI analysis for entry:', analysisEntryId);
+          // Use the saved entry ID directly for AI analysis
+          // For cloud users, savedEntryId is already the cloud ID
+          // For local users, savedEntryId is the local ID
+          console.log('Triggering AI analysis for entry:', savedEntryId);
           const aiAnalysis = await analyzeEntry(
             content,
-            analysisEntryId,
+            savedEntryId,
             'full'
           );
           if (aiAnalysis) {
             console.log('AI analysis completed successfully');
-            // Note: We don't update local entry here anymore,
-            // as it's handled in the analyzeEntry function
+            // Note: Analysis saving and data refresh is handled in the analyzeEntry function
           }
         } catch (analysisError) {
           console.warn('AI analysis failed:', analysisError);

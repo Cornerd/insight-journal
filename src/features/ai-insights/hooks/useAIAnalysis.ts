@@ -425,49 +425,52 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
           analysis,
         }));
 
-        // Save analysis result to both local and cloud storage (async, don't block UI)
-        // Important: Do this in the background without affecting the analysis result display
+        // 🎯 Epic 3 Complete: Cloud-First AI Analysis Storage
         setTimeout(async () => {
           try {
-            // Determine if we're dealing with a cloud ID or local ID
-            const isCloudId = session?.user && entryId.length > 20; // Cloud IDs are typically longer
-            let localEntryId = entryId;
+            if (session?.user) {
+              // ✅ Authenticated users: Save AI analysis directly to Supabase
+              try {
+                console.log('💾 Saving AI analysis to Supabase for entry:', entryId);
 
-            if (isCloudId) {
-              // If this is a cloud ID, try to find the corresponding local ID
-              const mappedLocalId = getLocalIdForCloudEntry(entryId);
-              if (mappedLocalId) {
-                localEntryId = mappedLocalId;
-                console.log(
-                  'Using mapped local ID for analysis save:',
-                  mappedLocalId
-                );
-              } else {
-                console.warn(
-                  'No local ID mapping found for cloud ID:',
-                  entryId
-                );
-                // Skip local save if we can't find the mapping
-                localEntryId = '';
+                // Use the cloud journal store to save analysis
+                const { saveAnalysis } = useCloudJournalStore.getState();
+                await saveAnalysis(entryId, {
+                  summary: analysis.summary,
+                  emotions: analysis.emotions ? { emotions: analysis.emotions } : {},
+                  suggestions: analysis.suggestions ? { suggestions: analysis.suggestions } : {},
+                  model: analysis.model,
+                });
+
+                console.log('✅ AI analysis saved to Supabase:', entryId);
+
+                // 🔄 Refresh cloud data to update UI with analysis results
+                try {
+                  const { loadEntries } = useCloudJournalStore.getState();
+                  await loadEntries();
+                  console.log('🔄 Cloud journal data refreshed after AI analysis');
+                } catch (refreshError) {
+                  console.warn('Failed to refresh cloud journal data:', refreshError);
+                }
+
+              } catch (cloudError) {
+                console.error('Failed to save AI analysis to Supabase:', cloudError);
+                // For authenticated users, this is a critical error since we don't use localStorage
+                // The analysis is still shown in UI, but won't persist
               }
-            }
-
-            // Save to local store if we have a local ID
-            if (localEntryId) {
+            } else {
+              // 📱 Non-authenticated users: Save to localStorage (MVP fallback)
               try {
                 const { updateEntry } = useJournalStore.getState();
                 const result = await updateEntry({
-                  id: localEntryId,
+                  id: entryId,
                   aiAnalysis: analysis,
                 });
 
                 if (result.success) {
-                  console.log(
-                    'AI analysis saved to local journal entry:',
-                    localEntryId
-                  );
+                  console.log('✅ AI analysis saved to localStorage:', entryId);
 
-                  // 🔄 Refresh local journal data to ensure UI shows updated analysis status
+                  // 🔄 Refresh local data to update UI
                   try {
                     const { loadEntries } = useJournalStore.getState();
                     await loadEntries();
@@ -476,58 +479,14 @@ export function useAIAnalysis(): UseAIAnalysisReturn {
                     console.warn('Failed to refresh local journal data:', refreshError);
                   }
                 } else {
-                  console.warn(
-                    'Failed to save AI analysis to local entry:',
-                    result.error?.message
-                  );
+                  console.warn('Failed to save AI analysis to localStorage:', result.error?.message);
                 }
               } catch (localSaveError) {
-                console.warn(
-                  'Error saving AI analysis to local entry:',
-                  localSaveError
-                );
-                // Don't propagate this error to the user
-              }
-            }
-
-            // Save to cloud storage if user is authenticated (using the original entryId which should be cloud ID)
-            if (session?.user && isCloudId) {
-              try {
-                const { saveAnalysis } = useCloudJournalStore.getState();
-                await saveAnalysis(entryId, {
-                  summary: analysis.summary,
-                  emotions: analysis.emotions
-                    ? { emotions: analysis.emotions }
-                    : {},
-                  suggestions: analysis.suggestions
-                    ? { suggestions: analysis.suggestions }
-                    : {},
-                  model: analysis.model,
-                });
-                console.log('AI analysis saved to cloud storage:', entryId);
-
-                // 🔄 Refresh cloud journal data to ensure UI shows updated analysis status
-                try {
-                  const { loadEntries } = useCloudJournalStore.getState();
-                  await loadEntries();
-                  console.log('🔄 Cloud journal data refreshed after AI analysis');
-                } catch (refreshError) {
-                  console.warn('Failed to refresh cloud journal data:', refreshError);
-                }
-              } catch (cloudError) {
-                console.warn(
-                  'Failed to save AI analysis to cloud storage:',
-                  cloudError
-                );
-                // Don't fail the analysis if cloud saving fails
+                console.warn('Error saving AI analysis to localStorage:', localSaveError);
               }
             }
           } catch (saveError) {
-            console.warn(
-              'Failed to save AI analysis to journal entry:',
-              saveError
-            );
-            // Don't affect the UI state even if saving fails
+            console.warn('Failed to save AI analysis:', saveError);
           }
         }, 100); // Small delay to ensure UI update happens first
 

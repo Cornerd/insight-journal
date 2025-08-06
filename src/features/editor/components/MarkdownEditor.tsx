@@ -158,18 +158,35 @@ export function MarkdownEditor({
       let savedEntryId: string;
       const title = content.split('\n')[0].substring(0, 50) || 'Untitled';
 
-      // 🔄 Save to appropriate storage based on authentication status
+      // 🎯 Epic 3 Complete: Cloud-First Data Strategy
       if (session?.user) {
-        // For authenticated users, save to cloud storage
+        // ✅ Authenticated users: Save directly to Supabase (Epic 3 requirement)
         if (currentEntry) {
-          // Update existing entry - TODO: Implement cloud update
-          await updateLocalEntry({
-            id: currentEntry.id,
-            content,
-          });
-          savedEntryId = currentEntry.id;
+          // Update existing cloud entry
+          try {
+            const response = await fetch(`/api/journal/entries/${currentEntry.id}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ title, content }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+              throw new Error(data.error || 'Failed to update cloud entry');
+            }
+
+            savedEntryId = currentEntry.id;
+            console.log('✅ Entry updated in cloud storage:', savedEntryId);
+
+          } catch (cloudError) {
+            console.error('Failed to update cloud entry:', cloudError);
+            throw new Error('Failed to save changes to cloud storage');
+          }
         } else {
-          // Create new entry in cloud storage using API
+          // Create new entry directly in Supabase
           try {
             const response = await fetch('/api/journal/entries', {
               method: 'POST',
@@ -186,45 +203,36 @@ export function MarkdownEditor({
             }
 
             savedEntryId = data.data.id;
-            console.log('✅ New entry saved to cloud storage:', savedEntryId);
-
-            // 🔄 Trigger cloud data refresh to update the UI
-            setTimeout(async () => {
-              try {
-                const { useCloudJournalStore } = await import('@/shared/store/cloudJournalStore');
-                const cloudStore = useCloudJournalStore.getState();
-                await cloudStore.loadEntries();
-                console.log('🔄 Cloud journal data refreshed after new entry creation');
-              } catch (refreshError) {
-                console.warn('Failed to refresh cloud journal data:', refreshError);
-              }
-            }, 100);
+            console.log('✅ New entry created in Supabase:', savedEntryId);
 
           } catch (cloudError) {
-            console.warn('Failed to save to cloud, falling back to local storage:', cloudError);
-            // Fallback to local storage if cloud save fails
-            const result = await addLocalEntry({ content });
-            if (result.success) {
-              savedEntryId = result.data.id;
-            } else {
-              throw new Error(result.error.message);
-            }
+            console.error('Failed to create cloud entry:', cloudError);
+            throw new Error('Failed to save entry to cloud storage');
           }
         }
+
+        // 🔄 Refresh cloud data to update UI immediately
+        setTimeout(async () => {
+          try {
+            const { useCloudJournalStore } = await import('@/shared/store/cloudJournalStore');
+            const cloudStore = useCloudJournalStore.getState();
+            await cloudStore.loadEntries();
+            console.log('🔄 Cloud journal data refreshed');
+          } catch (refreshError) {
+            console.warn('Failed to refresh cloud data:', refreshError);
+          }
+        }, 100);
+
       } else {
-        // For non-authenticated users, use local storage
+        // 📱 Non-authenticated users: Use localStorage (MVP fallback)
         if (currentEntry) {
-          // Update existing entry
           await updateLocalEntry({
             id: currentEntry.id,
             content,
           });
           savedEntryId = currentEntry.id;
         } else {
-          // Create new entry
-          const result = await addLocalEntry({
-            content,
-          });
+          const result = await addLocalEntry({ content });
           if (result.success) {
             savedEntryId = result.data.id;
           } else {

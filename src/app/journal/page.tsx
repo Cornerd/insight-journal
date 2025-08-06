@@ -16,7 +16,7 @@ export default function JournalPage() {
   const { data: session } = useSession();
   const { toasts, showSuccess, showError, removeToast } = useToast();
 
-  // Local storage
+  // 📱 Local storage (MVP fallback for non-authenticated users)
   const {
     entries: localEntries,
     currentEntry,
@@ -25,14 +25,16 @@ export default function JournalPage() {
     isLoading: localIsLoading,
   } = useJournalStore();
 
-  // Cloud storage
+  // ☁️ Cloud storage (Epic 3: Primary storage for authenticated users)
   const {
     entries: cloudEntries,
     isLoading: cloudIsLoading,
     deleteEntry: deleteCloudEntry,
   } = useCloudJournal();
 
-  // Use cloud entries if authenticated, otherwise local
+  // 🎯 Epic 3 Complete: Cloud-First Data Strategy
+  // Authenticated users → Supabase cloud storage
+  // Non-authenticated users → localStorage (MVP fallback)
   const useCloud = !!session?.user;
   const entries = useCloud ? cloudEntries : localEntries;
   const isLoading = useCloud ? cloudIsLoading : localIsLoading;

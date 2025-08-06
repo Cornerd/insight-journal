@@ -15,7 +15,9 @@ import {
 } from '../../ai-insights/hooks/useAIAnalysis';
 import { AIAnalysisCard } from '../../ai-insights/components/AIAnalysisCard';
 import { AIDebugPanel } from '../../ai-insights/components/AIDebugPanel';
-// import { OfflineIndicator } from '../../../components/ui/OfflineIndicator';
+import { useNetworkStatus } from '../../../hooks/useNetworkStatus';
+import { useOfflineSync } from '../../../hooks/useOfflineSync';
+import { OfflineStatusIndicator } from '../../../components/OfflineStatusIndicator';
 
 interface MarkdownEditorProps {
   placeholder?: string;
@@ -48,6 +50,10 @@ export function MarkdownEditor({
   // Session for cloud storage
   const { data: session } = useSession();
   const { showSuccess, showError } = useToast();
+
+  // Story 3.7: Offline-First Strategy
+  const { isOnline } = useNetworkStatus();
+  const { saveOfflineEntry } = useOfflineSync();
 
   // Local journal store (fallback and cache)
   const {
@@ -158,71 +164,103 @@ export function MarkdownEditor({
       let savedEntryId: string;
       const title = content.split('\n')[0].substring(0, 50) || 'Untitled';
 
-      // 🎯 Epic 3 Complete: Cloud-First Data Strategy
+      // 🎯 Story 3.7: Offline-First Strategy for Authenticated Users
       if (session?.user) {
-        // ✅ Authenticated users: Save directly to Supabase (Epic 3 requirement)
         if (currentEntry) {
-          // Update existing cloud entry
-          try {
-            const response = await fetch(`/api/journal/entries/${currentEntry.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ title, content }),
-            });
+          // Update existing entry
+          if (isOnline) {
+            // Online: Update directly in Supabase
+            try {
+              const response = await fetch(`/api/journal/entries/${currentEntry.id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, content }),
+              });
 
-            const data = await response.json();
+              const data = await response.json();
 
-            if (!response.ok || !data.success) {
-              throw new Error(data.error || 'Failed to update cloud entry');
+              if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to update cloud entry');
+              }
+
+              savedEntryId = currentEntry.id;
+              console.log('✅ Entry updated in Supabase (online):', savedEntryId);
+
+              // Refresh cloud data
+              setTimeout(async () => {
+                try {
+                  const { useCloudJournalStore } = await import('../../../shared/store/cloudJournalStore');
+                  const cloudStore = useCloudJournalStore.getState();
+                  await cloudStore.loadEntries();
+                  console.log('🔄 Cloud data refreshed after update');
+                } catch (refreshError) {
+                  console.warn('Failed to refresh cloud data:', refreshError);
+                }
+              }, 100);
+
+            } catch (cloudError) {
+              console.error('Failed to update cloud entry:', cloudError);
+              throw new Error('Failed to save changes to cloud storage');
             }
-
-            savedEntryId = currentEntry.id;
-            console.log('✅ Entry updated in cloud storage:', savedEntryId);
-
-          } catch (cloudError) {
-            console.error('Failed to update cloud entry:', cloudError);
-            throw new Error('Failed to save changes to cloud storage');
+          } else {
+            // Offline: Save for later sync (AC 3.7.1 & 3.7.2)
+            console.log('📱 Offline: Saving entry update for sync');
+            const offlineEntry = saveOfflineEntry(title, content);
+            savedEntryId = offlineEntry.id;
+            showSuccess('Entry Saved Offline', 'Your changes will sync when you\'re back online.');
           }
         } else {
-          // Create new entry directly in Supabase
-          try {
-            const response = await fetch('/api/journal/entries', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ title, content }),
-            });
+          // Create new entry
+          if (isOnline) {
+            // Online: Create directly in Supabase
+            try {
+              const response = await fetch('/api/journal/entries', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title, content }),
+              });
 
-            const data = await response.json();
+              const data = await response.json();
 
-            if (!response.ok || !data.success) {
-              throw new Error(data.error || 'Failed to create cloud entry');
+              if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Failed to create cloud entry');
+              }
+
+              savedEntryId = data.data.id;
+              console.log('✅ New entry created in Supabase (online):', savedEntryId);
+
+              // Refresh cloud data
+              setTimeout(async () => {
+                try {
+                  const { useCloudJournalStore } = await import('../../../shared/store/cloudJournalStore');
+                  const cloudStore = useCloudJournalStore.getState();
+                  await cloudStore.loadEntries();
+                  console.log('🔄 Cloud data refreshed after creation');
+                } catch (refreshError) {
+                  console.warn('Failed to refresh cloud data:', refreshError);
+                }
+              }, 100);
+
+            } catch (cloudError) {
+              console.error('Failed to create cloud entry:', cloudError);
+              // AC 3.7.1: Fall back to offline save if cloud fails
+              console.log('📱 Cloud failed, saving offline for sync');
+              const offlineEntry = saveOfflineEntry(title, content);
+              savedEntryId = offlineEntry.id;
+              showSuccess('Entry Saved Offline', 'Your entry will sync when connection is restored.');
             }
-
-            savedEntryId = data.data.id;
-            console.log('✅ New entry created in Supabase:', savedEntryId);
-
-          } catch (cloudError) {
-            console.error('Failed to create cloud entry:', cloudError);
-            throw new Error('Failed to save entry to cloud storage');
+          } else {
+            // Offline: Save for later sync (AC 3.7.1 & 3.7.2)
+            console.log('📱 Offline: Saving new entry for sync');
+            const offlineEntry = saveOfflineEntry(title, content);
+            savedEntryId = offlineEntry.id;
+            showSuccess('Entry Saved Offline', 'Your entry will sync when you\'re back online.');
           }
         }
-
-        // 🔄 Refresh cloud data to update UI immediately
-        setTimeout(async () => {
-          try {
-            const { useCloudJournalStore } = await import('@/shared/store/cloudJournalStore');
-            const cloudStore = useCloudJournalStore.getState();
-            await cloudStore.loadEntries();
-            console.log('🔄 Cloud journal data refreshed');
-          } catch (refreshError) {
-            console.warn('Failed to refresh cloud data:', refreshError);
-          }
-        }, 100);
-
       } else {
         // 📱 Non-authenticated users: Use localStorage (MVP fallback)
         if (currentEntry) {
@@ -408,6 +446,10 @@ export function MarkdownEditor({
       {/* Save Button and Status */}
       <div className='flex items-center justify-between'>
         <div className='flex items-center space-x-4'>
+          {/* Story 3.7: Offline Status Indicator (AC 3.7.3) */}
+          {session?.user && (
+            <OfflineStatusIndicator className='flex-shrink-0' />
+          )}
           <button
             onClick={handleSave}
             disabled={isLoading || !hasUnsavedChanges}

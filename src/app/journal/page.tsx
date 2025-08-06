@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
 import { DataMigration } from '@/components/DataMigration';
 import { ToastContainer } from '@/components/Toast';
 import { useToast } from '@/hooks/useToast';
+import { OfflineStatusBadge } from '@/components/OfflineStatusIndicator';
 
 export default function JournalPage() {
   const { data: session } = useSession();
@@ -139,9 +140,16 @@ export default function JournalPage() {
       <div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
         <div className='mb-6'>
           <div className='flex items-center justify-between mb-2'>
-            <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
-              {currentEntry ? 'Edit Entry' : 'New Entry'}
-            </h2>
+            <div className='flex items-center space-x-3'>
+              <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
+                {currentEntry ? 'Edit Entry' : 'New Entry'}
+              </h2>
+
+              {/* Story 3.7: Offline Status Badge (AC 3.7.3) */}
+              {session?.user && (
+                <OfflineStatusBadge />
+              )}
+            </div>
 
             {/* New Entry Button - Always visible when there are entries */}
             {entries.length > 0 && (

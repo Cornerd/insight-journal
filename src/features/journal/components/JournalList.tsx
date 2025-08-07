@@ -169,23 +169,23 @@ export function JournalList({
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div className='grid grid-cols-3 gap-4 pt-4 border-t border-violet-500/20'>
+        {/* Quick Stats - Responsive Grid */}
+        <div className='grid grid-cols-3 gap-2 lg:gap-4 pt-4 border-t border-violet-500/20'>
           <div className='text-center'>
-            <div className='text-lg font-bold text-white'>
+            <div className='text-base lg:text-lg font-bold text-white'>
               {entries.filter(e => e.aiAnalysis?.sentiment === 'positive').length}
             </div>
             <div className='text-xs text-emerald-300'>积极记录</div>
           </div>
           <div className='text-center'>
-            <div className='text-lg font-bold text-white'>
+            <div className='text-base lg:text-lg font-bold text-white'>
               {entries.filter(e => e.aiAnalysis).length}
             </div>
             <div className='text-xs text-violet-300'>已分析</div>
           </div>
           <div className='text-center'>
-            <div className='text-lg font-bold text-white'>
-              {Math.ceil(entries.length / 30)}
+            <div className='text-base lg:text-lg font-bold text-white'>
+              {Math.ceil(entries.length / 30) || 1}
             </div>
             <div className='text-xs text-pink-300'>月份</div>
           </div>
@@ -194,9 +194,9 @@ export function JournalList({
 
       {/* 🎨 Enhanced Entries List */}
       {!isCollapsed && (
-        <div className='space-y-3 max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin scrollbar-thumb-violet-500/30 scrollbar-track-transparent'>
+        <div className='space-y-3 max-h-[calc(100vh-450px)] lg:max-h-[calc(100vh-400px)] overflow-y-auto scrollbar-thin scrollbar-thumb-violet-500/30 scrollbar-track-transparent pr-2'>
           {sortedEntries.map(entry => (
-            <div key={entry.id} className='transform transition-all duration-200 hover:scale-[1.02]'>
+            <div key={entry.id} className='transform transition-all duration-200 hover:scale-[1.01] lg:hover:scale-[1.02]'>
               <JournalCard
                 entry={entry}
                 isSelected={entry.id === selectedEntryId}

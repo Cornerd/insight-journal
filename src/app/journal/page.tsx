@@ -133,7 +133,7 @@ export default function JournalPage() {
         <div className='absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]'></div>
       </div>
 
-      <div className='relative z-10 max-w-7xl mx-auto px-6 py-8'>
+      <div className='relative z-10 w-full px-6 py-8'>
         {/* 🌟 Enhanced Header */}
         <div className='mb-8'>
           <div className='flex items-center justify-between mb-6'>
@@ -177,11 +177,11 @@ export default function JournalPage() {
         {/* Data Migration Component */}
         <DataMigration />
 
-        {/* 🎯 Revolutionary Layout: Side-by-Side Design */}
-        <div className='grid lg:grid-cols-5 gap-8 min-h-[calc(100vh-200px)]'>
+        {/* 🎯 Revolutionary Layout: Full-Width Side-by-Side Design */}
+        <div className='grid lg:grid-cols-12 gap-8 min-h-[calc(100vh-200px)]'>
 
-          {/* Left: Journal Entries List (Enhanced) */}
-          <div className='lg:col-span-2'>
+          {/* Left: Journal Entries List (Enhanced) - More space on large screens */}
+          <div className='lg:col-span-4 xl:col-span-3'>
             <div className='sticky top-8'>
               <JournalList
                 entries={entries}
@@ -195,8 +195,8 @@ export default function JournalPage() {
             </div>
           </div>
 
-          {/* Right: Editor Section (Enhanced) */}
-          <div className='lg:col-span-3'>
+          {/* Right: Editor Section (Enhanced) - Flexible width */}
+          <div className='lg:col-span-8 xl:col-span-9'>
             <div className='bg-gradient-to-br from-slate-800/50 to-purple-900/30 backdrop-blur-xl border border-violet-500/20 rounded-3xl shadow-2xl shadow-violet-500/10 overflow-hidden'>
 
               {/* Editor Header */}

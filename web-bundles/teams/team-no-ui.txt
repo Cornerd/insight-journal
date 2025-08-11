@@ -2491,7 +2491,7 @@ The document should be comprehensive enough that future agents can understand:
 - Where to find key files and logic
 - What technical debt exists
 - What constraints must be respected
-- If PRD provided: What needs to change for the enhancement]]
+- If PRD provided: What needs to change for the enhancement
 
 ### 5. Quality Assurance
 
